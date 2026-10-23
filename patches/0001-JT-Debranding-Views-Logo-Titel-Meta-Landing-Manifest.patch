@@ -1,0 +1,419 @@
+From 811be18b4275a0eec1940a5b5b887c609d834181 Mon Sep 17 00:00:00 2001
+From: JT DocuSeal Build <kontakt@jason-talge.de>
+Date: Fri, 23 Oct 2026 19:55:15 +0200
+Subject: [PATCH 1/7] JT: Debranding-Views (Logo, Titel, Meta, Landing,
+ Manifest, Mail-Footer), Navbar/Settings-Links aus, product_name
+
+---
+ app/views/layouts/_head_tags.html.erb         |  2 +-
+ app/views/pages/landing.html.erb              | 92 ++++---------------
+ app/views/pwa/manifest.json.erb               | 19 ++--
+ app/views/shared/_email_attribution.html.erb  | 12 ---
+ app/views/shared/_github.html.erb             |  6 --
+ app/views/shared/_github_button.html.erb      | 10 --
+ app/views/shared/_html_title.html.erb         |  2 +-
+ app/views/shared/_logo.html.erb               |  5 +-
+ app/views/shared/_meta.html.erb               | 28 +++---
+ app/views/shared/_navbar.html.erb             |  4 +-
+ app/views/shared/_navbar_buttons.html.erb     |  5 -
+ app/views/shared/_powered_by.html.erb         | 13 +--
+ app/views/shared/_settings_nav.html.erb       |  2 +-
+ app/views/shared/_title.html.erb              |  3 +-
+ app/views/start_form/_docuseal_logo.html.erb  |  5 +-
+ app/views/submit_form/_docuseal_logo.html.erb |  5 +-
+ .../templates_share_link_qr/_logo.html.erb    |  3 +-
+ config/initializers/zz_jt_branding.rb         | 11 +++
+ 18 files changed, 67 insertions(+), 160 deletions(-)
+ create mode 100644 config/initializers/zz_jt_branding.rb
+
+diff --git a/app/views/layouts/_head_tags.html.erb b/app/views/layouts/_head_tags.html.erb
+index cfb72a1..2962704 100644
+--- a/app/views/layouts/_head_tags.html.erb
++++ b/app/views/layouts/_head_tags.html.erb
+@@ -1,5 +1,5 @@
+ <title>
+-  <%= turbo_native_app? ? content_for(:native_title) : (content_for(:html_title) || (signed_in? ? 'DocuSeal' : 'DocuSeal | Open Source Document Signing')) %>
++  <%= turbo_native_app? ? content_for(:native_title) : (content_for(:html_title) || 'Jason Talge | Elektronische Signatur') %>
+ </title>
+ <%= render 'shared/meta' %>
+ <% if turbo_native_app? %>
+diff --git a/app/views/pages/landing.html.erb b/app/views/pages/landing.html.erb
+index 78cc823..8538271 100644
+--- a/app/views/pages/landing.html.erb
++++ b/app/views/pages/landing.html.erb
+@@ -1,79 +1,21 @@
+ <section class="flex items-center justify-center">
+-  <div class="py-10 mx-auto max-w-7xl">
+-    <div class="max-w-xl mx-auto">
+-      <div class="text-center">
+-        <div class="relative flex flex-col items-center">
+-          <%= render 'shared/logo', width: '100', height: '100' %>
+-          <h1 class="text-6xl font-bold mt-4 mb-4">
+-            DocuSeal
+-          </h1>
+-          <% if Docuseal.version.present? %>
+-            <a href="https://github.com/docusealco/docuseal/releases" target="_blank" class="badge badge-outline badge-lg block mx-auto">
+-              v<%= Docuseal.version %>
+-            </a>
+-          <% end %>
+-        </div>
+-        <h2 class="mt-4 mb-16 text-lg text-center text-gray-600">
+-          A self-hosted and open-source web platform that provides secure and efficient digital document signing and processing.
+-        </h2>
+-      </div>
+-    </div>
+-    <div class="grid grid-cols-1 gap-12 md:gap-10 md:grid-cols-2">
+-      <div class="card bg-base-200">
+-        <div class="card-body">
+-          <div class="text-center transition-all">
+-            <div class="inline-block p-4 mb-4 -mt-16 bg-base-content rounded-full">
+-              <%= svg_icon('brand_docker', class: 'w-10 h-10 text-base-100 stroke-1') %>
+-            </div>
+-            <h3 class="mb-4 text-2xl font-semibold">Easy to Start</h3>
+-            <p class="text-base text-gray-500">
+-              Run on your own host using Docker container, or deploy on  your favorite managed PaaS with a single <a href="https://www.docuseal.com/install" class="link link-neutral font-bold">click</a>.
+-            </p>
+-          </div>
+-        </div>
+-      </div>
+-      <div class="card bg-base-200">
+-        <div class="card-body">
+-          <div class="text-center transition-all">
+-            <div class="inline-block p-4 mb-4 -mt-16 bg-base-content rounded-full">
+-              <%= svg_icon('devices', class: 'w-10 h-10 text-base-100') %>
+-            </div>
+-            <h3 class="mb-4 text-2xl font-semibold">Mobile Optimized</h3>
+-            <p class="text-base text-gray-500">
+-              Review and sign digital documents online from any device.
+-              Docuseal document forms are optimized for screens of all sizes.
+-            </p>
+-          </div>
+-        </div>
+-      </div>
+-      <div class="card bg-base-200">
+-        <div class="card-body">
+-          <div class="text-center transition-all">
+-            <div class="inline-block p-4 mb-4 -mt-16 bg-base-content rounded-full">
+-              <%= svg_icon('shield_check', class: 'w-10 h-10 text-base-100') %>
+-            </div>
+-            <h3 class="mb-4 text-2xl font-semibold">Secure</h3>
+-            <p class="text-base text-gray-500">
+-              Host it on your hardware under a VPN to ensure that important documents can be accesses only within your organization.
+-            </p>
+-          </div>
+-        </div>
+-      </div>
+-      <div class="card bg-base-200">
+-        <div class="card-body">
+-          <div class="text-center transition-all">
+-            <div class="inline-block p-4 mb-4 -mt-16 bg-base-content rounded-full">
+-              <%= svg_icon('brand_github', class: 'w-10 h-10 text-base-100') %>
+-            </div>
+-            <h3 class="mb-4 text-2xl font-semibold">Open Source</h3>
+-            <p class="text-base text-gray-500">
+-              Source code is available under <a href="<%= Docuseal::GITHUB_URL %>" class="link link-neutral font-bold" target="_blank">github.com/docusealco</a>.<br>
+-              Open-source contributors are always ready to help!
+-            </p>
+-          </div>
+-        </div>
+-      </div>
++  <div class="py-10 mx-auto max-w-7xl px-4">
++    <div class="max-w-xl mx-auto text-center">
++      <img src="/jt/logo-horizontal-weiss.svg?v=1" alt="Jason Talge Softwareentwicklung" class="mx-auto" style="width: 100%; max-width: 28rem; height: auto;">
++      <h1 class="text-4xl font-bold mt-12 mb-4">Elektronische Signatur</h1>
++      <p class="text-lg text-gray-600" style="margin-bottom: 2.5rem;">
++        Dokumente sicher und bequem online unterschreiben.<br>
++        Sie haben eine Signaturanfrage erhalten? Bitte nutzen Sie den Link aus Ihrer E-Mail.
++      </p>
++      <% unless signed_in? %>
++        <%= link_to t('sign_in'), new_user_session_path, class: 'base-button inline-flex', style: 'padding-left: 2.5rem; padding-right: 2.5rem;' %>
++      <% end %>
++      <p class="mt-10 text-sm text-gray-500">
++        <a href="https://jason-talge.de/impressum" class="underline">Impressum</a>
++        &middot;
++        <a href="https://jason-talge.de/datenschutz" class="underline">Datenschutz</a>
++      </p>
+     </div>
+   </div>
+ </section>
+-<%= render 'shared/attribution', with_counter: true %>
++<%= render 'shared/attribution' %>
+diff --git a/app/views/pwa/manifest.json.erb b/app/views/pwa/manifest.json.erb
+index 6802206..ad192ee 100644
+--- a/app/views/pwa/manifest.json.erb
++++ b/app/views/pwa/manifest.json.erb
+@@ -1,25 +1,30 @@
+ {
+-  "name": "<%= Docuseal.product_name %>",
+-  "short_name": "<%= Docuseal.product_name %>",
++  "name": "Jason Talge – Elektronische Signatur",
++  "short_name": "JT Signatur",
+   "id": "/",
+   "icons": [
+     {
+-      "src": "/favicon.svg",
++      "src": "/jt/favicon.svg",
+       "type": "image/svg+xml",
+       "sizes": "any"
+     },
+     {
+-      "src": "/apple-touch-icon.png",
++      "src": "/jt/icon-192.png",
+       "type": "image/png",
+       "sizes": "192x192"
++    },
++    {
++      "src": "/jt/icon-512.png",
++      "type": "image/png",
++      "sizes": "512x512"
+     }
+   ],
+   "start_url": "/",
+   "display": "standalone",
+   "scope": "/",
+   "orientation": "any",
+-  "description": "<%= Docuseal.product_name %> is an open source platform that provides secure and efficient digital document signing and processing.",
++  "description": "Dokumente sicher elektronisch unterschreiben – Jason Talge Softwareentwicklung.",
+   "categories": ["productivity", "utilities"],
+-  "theme_color": "#FAF7F4",
+-  "background_color": "#FAF7F4"
++  "theme_color": "#061A2E",
++  "background_color": "#061A2E"
+ }
+diff --git a/app/views/shared/_email_attribution.html.erb b/app/views/shared/_email_attribution.html.erb
+index e1612eb..e69de29 100644
+--- a/app/views/shared/_email_attribution.html.erb
++++ b/app/views/shared/_email_attribution.html.erb
+@@ -1,12 +0,0 @@
+-<p>
+-  ---
+-</p>
+-<p>
+-  <% if @current_account&.testing? %>
+-    <%= t('sent_using_product_name_in_testing_mode_html', product_url: "#{Docuseal::PRODUCT_EMAIL_URL}/start", product_name: Docuseal.product_name) %>
+-  <% elsif Docuseal.multitenant? %>
+-    <%= t('sent_using_product_name_free_document_signing_html', product_url: "#{Docuseal::PRODUCT_EMAIL_URL}/start", product_name: Docuseal.product_name) %>
+-  <% else %>
+-    <%= t('sent_using_product_name_open_source_software_html', product_url: "#{Docuseal::PRODUCT_EMAIL_URL}/open", product_name: Docuseal.product_name) %>
+-  <% end %>
+-</p>
+diff --git a/app/views/shared/_github.html.erb b/app/views/shared/_github.html.erb
+index be9d7c0..e69de29 100644
+--- a/app/views/shared/_github.html.erb
++++ b/app/views/shared/_github.html.erb
+@@ -1,6 +0,0 @@
+-<a target="_blank" href="<%= Docuseal::GITHUB_URL %>" rel="noopener noreferrer nofollow" class="relative flex items-center rounded-full px-2 py-0.5 text-xs leading-4 mt-1 text-base-content border border-base-300 tooltip tooltip-bottom tooltip-no-touch" data-tip="Give a star on GitHub">
+-  <span class="flex items-center justify-between space-x-0.5 font-medium">
+-    <%= svg_icon('start', class: 'h-3 w-3') %>
+-    <span>18k</span>
+-  </span>
+-</a>
+diff --git a/app/views/shared/_github_button.html.erb b/app/views/shared/_github_button.html.erb
+index 5bb4bdd..e69de29 100644
+--- a/app/views/shared/_github_button.html.erb
++++ b/app/views/shared/_github_button.html.erb
+@@ -1,10 +0,0 @@
+-<a href="https://github.com/docusealco/docuseal" class="btn btn-neutral btn-sm btn-outline inline-flex items-center justify-center" target="_blank" alt="Star on GitHub" style="height: 37px">
+-  <span>
+-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+-      <path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+-    </svg>
+-  </span>
+-  <span class="flex">
+-    <span class="hidden lg:block">Star on&nbsp</span>GitHub
+-  </span>
+-</a>
+diff --git a/app/views/shared/_html_title.html.erb b/app/views/shared/_html_title.html.erb
+index af582b3..32b790b 100644
+--- a/app/views/shared/_html_title.html.erb
++++ b/app/views/shared/_html_title.html.erb
+@@ -1 +1 @@
+-<% content_for(:html_title, "#{title} | DocuSeal") %>
++<% content_for(:html_title, "#{title} | Jason Talge") %>
+diff --git a/app/views/shared/_logo.html.erb b/app/views/shared/_logo.html.erb
+index 57e6e0d..6d47bf1 100644
+--- a/app/views/shared/_logo.html.erb
++++ b/app/views/shared/_logo.html.erb
+@@ -1,4 +1,3 @@
+-<svg class="<%= local_assigns[:class] %>" height="<%= local_assigns.fetch(:height, '37') %>" width="<%= local_assigns.fetch(:width, '37') %>" style="color: #e97a42" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+-  <path fill="currentColor" d="M 178.224 72.09 c -0.296 -1.463 -0.627 -2.919 -0.996 -4.364 -0.293 -1.151 -0.616 -2.293 -0.956 -3.433 -0.301 -1.008 -0.612 -2.014 -0.95 -3.012 -0.531 -1.578 -1.113 -3.142 -1.735 -4.694 -0.216 -0.54 -0.433 -1.082 -0.661 -1.618 -0.195 -0.462 -0.399 -0.917 -0.601 -1.375 -0.262 -0.591 -0.53 -1.177 -0.804 -1.762 -0.074 -0.159 -0.151 -0.315 -0.226 -0.474 -0.209 -0.441 -0.422 -0.881 -0.638 -1.318 -0.076 -0.154 -0.153 -0.306 -0.229 -0.459 -0.236 -0.471 -0.477 -0.939 -0.721 -1.406 -0.053 -0.101 -0.105 -0.201 -0.158 -0.302 -1.143 -2.16 -2.367 -4.269 -3.68 -6.322 -0.116 -0.181 -0.237 -0.359 -0.355 -0.539 -0.094 -0.144 -0.189 -0.288 -0.284 -0.432 -0.284 -0.431 -0.57 -0.861 -0.862 -1.287 -0.112 -0.164 -0.225 -0.326 -0.338 -0.489 -0.193 -0.279 -0.382 -0.56 -0.579 -0.836 -0.089 -0.125 -0.182 -0.249 -0.273 -0.374 -0.13 -0.182 -0.264 -0.362 -0.395 -0.542 -0.277 -0.38 -0.556 -0.76 -0.838 -1.135 -0.15 -0.199 -0.303 -0.395 -0.454 -0.593 -0.21 -0.274 -0.417 -0.552 -0.63 -0.823 -0.055 -0.069 -0.111 -0.136 -0.166 -0.205 -0.482 -0.61 -0.971 -1.216 -1.47 -1.814 -0.129 -0.155 -0.262 -0.306 -0.392 -0.461 -0.402 -0.476 -0.808 -0.95 -1.22 -1.417 -0.186 -0.212 -0.375 -0.422 -0.563 -0.631 -0.384 -0.428 -0.773 -0.854 -1.167 -1.276 -0.176 -0.189 -0.351 -0.379 -0.529 -0.567 -0.564 -0.595 -1.134 -1.186 -1.716 -1.768 -1.091 -1.091 -2.207 -2.15 -3.346 -3.178 -1.016 -0.919 -2.05 -1.815 -3.103 -2.684 -0.772 -0.636 -1.557 -1.255 -2.348 -1.864 -3.465 -2.67 -7.112 -5.075 -10.927 -7.209 -2.869 -1.604 -5.83 -3.06 -8.883 -4.351 -2.443 -1.033 -4.922 -1.948 -7.428 -2.756 -8.879 -2.863 -18.13 -4.318 -27.605 -4.318 -3.19 0 -6.354 0.169 -9.488 0.496 -4.036 0.421 -8.019 1.114 -11.94 2.073 -1.732 0.423 -3.452 0.892 -5.157 1.42 -2.856 0.883 -5.673 1.912 -8.447 3.085 -2.645 1.118 -5.222 2.357 -7.729 3.711 -2.574 1.39 -5.073 2.901 -7.494 4.533 -1.195 0.805 -2.37 1.64 -3.527 2.503 -1.156 0.864 -2.292 1.756 -3.408 2.676 -0.553 0.456 -1.1 0.919 -1.643 1.389 -1.649 1.427 -3.252 2.92 -4.806 4.473 -2.582 2.582 -4.991 5.299 -7.222 8.138 -0.892 1.135 -1.756 2.292 -2.59 3.467 -0.417 0.588 -0.827 1.18 -1.23 1.778 -0.403 0.597 -0.798 1.199 -1.186 1.806 -0.388 0.607 -0.769 1.218 -1.143 1.835 -2.241 3.697 -4.216 7.562 -5.916 11.582 -1.095 2.589 -2.059 5.217 -2.901 7.877 -0.153 0.482 -0.3 0.965 -0.444 1.449 -0.339 1.14 -0.663 2.282 -0.956 3.433 -0.369 1.446 -0.7 2.901 -0.996 4.364 -1.034 5.121 -1.618 10.343 -1.749 15.637 -0.018 0.757 -0.028 1.514 -0.028 2.274 0 1.123 0.02 2.244 0.062 3.361 0.285 7.82 1.568 15.475 3.825 22.879 0.044 0.147 0.088 0.295 0.133 0.441 0.877 2.823 1.894 5.608 3.054 8.35 0.85 2.009 1.769 3.98 2.755 5.912 0.539 1.057 1.105 2.099 1.685 3.132 4.013 7.142 8.98 13.698 14.846 19.564 7.713 7.713 16.611 13.878 26.477 18.352 0.705 0.32 1.415 0.632 2.131 0.935 2.081 0.88 4.185 1.679 6.313 2.396 9.217 3.106 18.85 4.677 28.719 4.677 8.031 0 15.902 -1.047 23.522 -3.107 0.633 -0.172 1.266 -0.35 1.895 -0.535 0.757 -0.222 1.509 -0.456 2.26 -0.698 0.717 -0.232 1.431 -0.474 2.145 -0.723 1.752 -0.616 3.49 -1.281 5.211 -2.009 0.755 -0.319 1.503 -0.651 2.247 -0.989 1.237 -0.563 2.459 -1.15 3.664 -1.766 0.644 -0.328 1.283 -0.665 1.917 -1.009 1.654 -0.896 3.274 -1.848 4.865 -2.844 5.736 -3.591 11.06 -7.827 15.912 -12.679 0.775 -0.775 1.534 -1.562 2.278 -2.36 5.204 -5.59 9.636 -11.754 13.246 -18.417 0.343 -0.634 0.68 -1.274 1.009 -1.917 0.482 -0.944 0.943 -1.9 1.392 -2.863 0.471 -1.007 0.928 -2.021 1.364 -3.049 1.22 -2.886 2.281 -5.82 3.187 -8.793 0.559 -1.833 1.056 -3.68 1.494 -5.542 0.108 -0.458 0.211 -0.916 0.312 -1.376 0.194 -0.883 0.373 -1.77 0.539 -2.659 1.02 -5.455 1.542 -11.02 1.542 -16.663 0 -6.074 -0.595 -12.058 -1.776 -17.911 z m -161.733 19.614 c -1.118 -56.662 44.604 -74.877 60.998 -67.647 2.187 0.965 4.732 2.431 7.042 2.96 5.295 1.213 13.432 -3.113 13.521 6.273 0.078 8.156 -3.389 13.108 -10.797 16.177 -7.539 3.124 -14.777 9.181 -19.95 15.493 -21.487 26.216 -31.231 68.556 -7.565 94.296 -13.679 -5.545 -42.418 -25.467 -43.248 -67.552 z m 91.109 72.619 c -0.053 0.008 -4.171 0.775 -4.171 0.775 0 0 -15.862 -22.957 -23.509 -21.719 11.291 16.04 12.649 22.625 12.649 22.625 -0.053 0.001 -0.107 0.001 -0.161 0.003 -51.831 2.131 -42.785 -64.026 -28.246 -86.502 -1.555 13.073 8.878 39.992 39.034 44.1 9.495 1.293 32.302 -3.275 41.015 -11.38 0.098 1.825 0.163 3.85 0.159 6.013 -0.046 23.538 -13.47 42.743 -36.77 46.085 z m 30.575 -15.708 c 9.647 -9.263 12.869 -27.779 9.103 -44.137 -4.608 -20.011 -28.861 -32.383 -40.744 -35.564 5.766 -8.089 27.908 -14.274 39.567 5.363 -5.172 -10.519 -13.556 -23.023 -1.732 -33.128 12.411 13.329 19.411 29.94 20.161 48.7 0.75 18.753 -6.64 41.768 -26.355 58.765 z" />
+-  <circle fill="currentColor" cx="71.927" cy="32.004" r="2.829" />
++<svg class="<%= local_assigns[:class] %>" height="<%= local_assigns.fetch(:height, '37') %>" width="<%= local_assigns.fetch(:width, '37') %>" style="color: #FFFFFF" viewBox="0 0 150 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Jason Talge">
++  <path fill="currentColor" d="M50,0 L150,0 L150,20 L110,20 L110,130 L90,130 L90,20 L70,20 L70,95 A35,35 0 0 1 0,95 L20,95 A15,15 0 0 0 50,95 Z" />
+ </svg>
+diff --git a/app/views/shared/_meta.html.erb b/app/views/shared/_meta.html.erb
+index a6d492f..19830dc 100644
+--- a/app/views/shared/_meta.html.erb
++++ b/app/views/shared/_meta.html.erb
+@@ -1,31 +1,29 @@
+ <% if Docuseal.demo? || (request.path != '/' && !devise_controller?) %>
+   <meta name="robots" content="noindex">
+ <% end %>
+-<% title = content_for(:html_title) || (signed_in? ? 'DocuSeal' : 'DocuSeal | Open Source Document Signing') %>
+-<% description = content_for(:html_description) || 'Open source, self-hosted tool to streamline document filling and signing. Create custom PDF forms to complete and sign with an easy to use online tool.' %>
++<% title = content_for(:html_title) || 'Jason Talge | Elektronische Signatur' %>
++<% description = content_for(:html_description) || 'Dokumente sicher elektronisch unterschreiben – Jason Talge Softwareentwicklung.' %>
+ <meta name="description" content="<%= description %>">
+ <meta property="og:title" content="<%= title %>">
+ <meta property="og:description" content="<%= description %>">
+ <meta property="og:type" content="website">
+ <meta property="og:url" content="<%= root_url %>">
+-<meta property="og:site_name" content="DocuSeal">
++<meta property="og:site_name" content="Jason Talge">
+ <% if content_for(:disable_image_preview) %>
+   <meta property="og:image" content="">
+   <meta name="twitter:image" content="">
+ <% else %>
+-  <meta property="og:image" content="<%= content_for(:preview_image_url).presence || "#{root_url}preview.png" %>">
+-  <meta property="og:image:width" content="800">
+-  <meta property="og:image:height" content="800">
+-  <meta name="twitter:image" content="<%= content_for(:preview_image_url).presence || "#{root_url}preview.png" %>">
++  <meta property="og:image" content="<%= content_for(:preview_image_url).presence || "#{root_url}jt/og-image.png" %>">
++  <meta property="og:image:width" content="1024">
++  <meta property="og:image:height" content="1024">
++  <meta name="twitter:image" content="<%= content_for(:preview_image_url).presence || "#{root_url}jt/og-image.png" %>">
+ <% end %>
+ <meta name="twitter:card" content="summary">
+-<meta name="twitter:creator" content="@docusealco">
+-<meta name="twitter:site" content="@docusealco">
+ <meta name="twitter:title" content="<%= title %>">
+ <meta name="twitter:description" content="<%= description %>">
+-<link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png">
+-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+-<meta name="theme-color" content="#faf7f5">
++<link rel="apple-touch-icon" sizes="180x180" href="/jt/apple-touch-icon.png?v=1">
++<link rel="icon" type="image/png" sizes="32x32" href="/jt/favicon-32x32.png?v=1">
++<link rel="icon" type="image/png" sizes="16x16" href="/jt/favicon-16x16.png?v=1">
++<link rel="icon" type="image/svg+xml" href="/jt/favicon.svg?v=1">
++<meta name="theme-color" content="#061a2e">
++<link rel="stylesheet" href="/jt/jt-theme.css?v=3">
+diff --git a/app/views/shared/_navbar.html.erb b/app/views/shared/_navbar.html.erb
+index f44a3da..42b6739 100644
+--- a/app/views/shared/_navbar.html.erb
++++ b/app/views/shared/_navbar.html.erb
+@@ -40,7 +40,7 @@
+               <span class="mr-1"><%= t('profile') %></span>
+             <% end %>
+           </li>
+-          <% if !Docuseal.demo? && can?(:manage, EncryptedConfig) %>
++          <% if false %>
+             <li>
+               <%= link_to Docuseal.multitenant? ? console_redirect_index_path : Docuseal::CONSOLE_URL, data: { turbo_prefetch: false }, class: 'flex items-center' do %>
+                 <%= svg_icon('terminal', class: 'w-5 h-5 flex-shrink-0 stroke-2') %>
+@@ -56,7 +56,7 @@
+               <% end %>
+             </li>
+           <% end %>
+-          <% if Docuseal.multitenant? || current_user.role == 'superadmin' %>
++          <% if false %>
+             <li>
+               <%= link_to Docuseal::CHATGPT_URL, target: 'blank', class: 'flex items-center' do %>
+                 <%= svg_icon('sparkles', class: 'w-5 h-5 flex-shrink-0 stroke-2') %>
+diff --git a/app/views/shared/_navbar_buttons.html.erb b/app/views/shared/_navbar_buttons.html.erb
+index 056f339..242af66 100644
+--- a/app/views/shared/_navbar_buttons.html.erb
++++ b/app/views/shared/_navbar_buttons.html.erb
+@@ -1,8 +1,3 @@
+ <% if signed_in? && current_user != true_user %>
+   <%= render 'shared/test_alert' %>
+-<% elsif request.path.starts_with?('/settings') %>
+-  <%= link_to "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}", class: 'hidden md:inline-flex btn btn-warning btn-sm', data: { turbo_prefetch: false } do %>
+-    <%= t('upgrade') %>
+-  <% end %>
+-  <span class="hidden md:inline-flex h-3 border-r border-base-content"></span>
+ <% end %>
+diff --git a/app/views/shared/_powered_by.html.erb b/app/views/shared/_powered_by.html.erb
+index dd0ee3f..dcb7925 100644
+--- a/app/views/shared/_powered_by.html.erb
++++ b/app/views/shared/_powered_by.html.erb
+@@ -1,13 +1,4 @@
+ <div class="text-center px-2">
+-  <% if local_assigns[:with_counter] %>
+-    <% count = CompletedSubmitter.distinct.count(:submission_id) %>
+-    <% if count > 1 %>
+-      <%= t('count_documents_signed_with_html', count:) %>
+-    <% else %>
+-      <%= t('powered_by') %>
+-    <% end %>
+-  <% else %>
+-    <%= t('powered_by') %>
+-  <% end %>
+-  <a href="<%= Docuseal::PRODUCT_URL %><%= local_assigns[:link_path] %>" class="underline"><%= Docuseal.product_name %></a> - <%= t('open_source_documents_software') %>
++  <%= t('powered_by') %>
++  <a href="<%= Docuseal::PRODUCT_URL %><%= local_assigns[:link_path] %>" class="underline">DocuSeal</a> - <%= t('open_source_documents_software') %>
+ </div>
+diff --git a/app/views/shared/_settings_nav.html.erb b/app/views/shared/_settings_nav.html.erb
+index 0dc5a83..cae99b5 100644
+--- a/app/views/shared/_settings_nav.html.erb
++++ b/app/views/shared/_settings_nav.html.erb
+@@ -135,7 +135,7 @@
+         <% end %>
+       </ul>
+     </menu-active>
+-    <% if Docuseal.multitenant? || cannot?(:manage, :tenants) %>
++    <% if false %>
+       <div id="support_channels" class="mx-4 border-t border-base-300 <%= 'hidden md:block' unless expanded %>">
+         <% unless turbo_native_app? %>
+           <div class="text-sm mt-3">
+diff --git a/app/views/shared/_title.html.erb b/app/views/shared/_title.html.erb
+index 9830a7c..7a48f80 100644
+--- a/app/views/shared/_title.html.erb
++++ b/app/views/shared/_title.html.erb
+@@ -1,2 +1 @@
+-<%= render 'shared/logo' %>
+-<span>DocuSeal</span>
++<img src="/jt/logo-horizontal-weiss.svg?v=1" alt="Jason Talge" style="height: 36px; width: auto;">
+diff --git a/app/views/start_form/_docuseal_logo.html.erb b/app/views/start_form/_docuseal_logo.html.erb
+index 735c607..834d2da 100644
+--- a/app/views/start_form/_docuseal_logo.html.erb
++++ b/app/views/start_form/_docuseal_logo.html.erb
+@@ -1,6 +1,3 @@
+ <a href="/" class="flex justify-center items-center">
+-  <span class="mr-3">
+-    <%= render 'shared/logo', width: '50px', height: '50px' %>
+-  </span>
+-  <h1 class="text-5xl font-bold text-center">DocuSeal</h1>
++  <img src="/jt/logo-horizontal-weiss.svg?v=1" alt="Jason Talge" style="height: 48px; width: auto; max-width: 100%;">
+ </a>
+diff --git a/app/views/submit_form/_docuseal_logo.html.erb b/app/views/submit_form/_docuseal_logo.html.erb
+index 645f7fc..7b37a92 100644
+--- a/app/views/submit_form/_docuseal_logo.html.erb
++++ b/app/views/submit_form/_docuseal_logo.html.erb
+@@ -1,4 +1,3 @@
+-<a href="<%= root_path %>" class="mx-auto text-2xl md:text-3xl font-bold items-center flex space-x-3">
+-  <%= render 'shared/logo', class: 'w-9 h-9 md:w-12 md:h-12' %>
+-  <span><%= Docuseal.product_name %></span>
++<a href="<%= root_path %>" class="mx-auto flex items-center">
++  <img src="/jt/logo-horizontal-weiss.svg?v=1" alt="Jason Talge" style="height: 40px; width: auto; max-width: 100%;">
+ </a>
+diff --git a/app/views/templates_share_link_qr/_logo.html.erb b/app/views/templates_share_link_qr/_logo.html.erb
+index 067e322..7a48f80 100644
+--- a/app/views/templates_share_link_qr/_logo.html.erb
++++ b/app/views/templates_share_link_qr/_logo.html.erb
+@@ -1,2 +1 @@
+-<%= render 'shared/logo' %>
+-<span><%= Docuseal.product_name %></span>
++<img src="/jt/logo-horizontal-weiss.svg?v=1" alt="Jason Talge" style="height: 36px; width: auto;">
+diff --git a/config/initializers/zz_jt_branding.rb b/config/initializers/zz_jt_branding.rb
+new file mode 100644
+index 0000000..24b99ae
+--- /dev/null
++++ b/config/initializers/zz_jt_branding.rb
+@@ -0,0 +1,11 @@
++# frozen_string_literal: true
++
++# JT-Branding (gemountet aus /root/docuseal/branding, siehe README.md)
++Rails.application.config.to_prepare do
++  Docuseal.singleton_class.send(:define_method, :product_name) { 'Jason Talge Signatur' }
++end
++
++Rails.application.config.after_initialize do
++  I18n.backend.store_translations(:en, welcome_to_docuseal: 'Welcome to Jason Talge Signatur')
++  I18n.backend.store_translations(:de, welcome_to_docuseal: 'Willkommen bei Jason Talge Signatur')
++end
+-- 
+2.43.0
+
