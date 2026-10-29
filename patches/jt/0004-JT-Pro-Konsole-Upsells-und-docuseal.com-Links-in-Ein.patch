@@ -1,4 +1,4 @@
-From 773a15f247074f3c4d711bdaff553c99278594cd Mon Sep 17 00:00:00 2001
+From b73248872393f552e961e24c75f226d4b84f9211 Mon Sep 17 00:00:00 2001
 From: JT DocuSeal Build <kontakt@jason-talge.de>
 Date: Fri, 23 Oct 2026 19:57:13 +0200
 Subject: [PATCH 4/7] JT: Pro-/Konsole-Upsells und docuseal.com-Links in
@@ -22,7 +22,7 @@ Subject: [PATCH 4/7] JT: Pro-/Konsole-Upsells und docuseal.com-Links in
  14 files changed, 13 insertions(+), 48 deletions(-)
 
 diff --git a/app/views/esign_settings/_default_signature_row.html.erb b/app/views/esign_settings/_default_signature_row.html.erb
-index 5704bf2..67c7e61 100644
+index 5704bf2d..67c7e61d 100644
 --- a/app/views/esign_settings/_default_signature_row.html.erb
 +++ b/app/views/esign_settings/_default_signature_row.html.erb
 @@ -12,9 +12,7 @@
@@ -37,7 +37,7 @@ index 5704bf2..67c7e61 100644
      <td data-label="<%= t('status') %>">
        <div class="md:tooltip" data-tip="<%= t('unlock_with_docuseal_pro') %>">
 diff --git a/app/views/notifications_settings/_reminder_placeholder.html.erb b/app/views/notifications_settings/_reminder_placeholder.html.erb
-index 38b05ce..47579e3 100644
+index 38b05ce5..47579e3e 100644
 --- a/app/views/notifications_settings/_reminder_placeholder.html.erb
 +++ b/app/views/notifications_settings/_reminder_placeholder.html.erb
 @@ -6,10 +6,6 @@
@@ -52,7 +52,7 @@ index 38b05ce..47579e3 100644
    </div>
  </div>
 diff --git a/app/views/personalization_settings/_logo_placeholder.html.erb b/app/views/personalization_settings/_logo_placeholder.html.erb
-index 9a8358e..5bdde3f 100644
+index 9a8358e3..5bdde3f2 100644
 --- a/app/views/personalization_settings/_logo_placeholder.html.erb
 +++ b/app/views/personalization_settings/_logo_placeholder.html.erb
 @@ -6,10 +6,6 @@
@@ -67,7 +67,7 @@ index 9a8358e..5bdde3f 100644
    </div>
  </div>
 diff --git a/app/views/shared/_settings_nav.html.erb b/app/views/shared/_settings_nav.html.erb
-index cae99b5..ca97b60 100644
+index cae99b58..ca97b60a 100644
 --- a/app/views/shared/_settings_nav.html.erb
 +++ b/app/views/shared/_settings_nav.html.erb
 @@ -43,7 +43,7 @@
@@ -107,7 +107,7 @@ index cae99b5..ca97b60 100644
                <%= link_to 'SSO', settings_sso_index_path, class: 'text-base hover:bg-base-300', data: nav_link_data %>
              </li>
 diff --git a/app/views/sms_settings/_placeholder.html.erb b/app/views/sms_settings/_placeholder.html.erb
-index 13f2e2e..e20fc75 100644
+index 13f2e2ea..e20fc752 100644
 --- a/app/views/sms_settings/_placeholder.html.erb
 +++ b/app/views/sms_settings/_placeholder.html.erb
 @@ -6,10 +6,6 @@
@@ -122,7 +122,7 @@ index 13f2e2e..e20fc75 100644
    </div>
  </div>
 diff --git a/app/views/sso_settings/_placeholder.html.erb b/app/views/sso_settings/_placeholder.html.erb
-index c649709..d8bf5f4 100644
+index c6497097..d8bf5f48 100644
 --- a/app/views/sso_settings/_placeholder.html.erb
 +++ b/app/views/sso_settings/_placeholder.html.erb
 @@ -6,10 +6,6 @@
@@ -137,7 +137,7 @@ index c649709..d8bf5f4 100644
    </div>
  </div>
 diff --git a/app/views/submissions/_bulk_send_placeholder.html.erb b/app/views/submissions/_bulk_send_placeholder.html.erb
-index f81f653..dd3491f 100644
+index f81f6534..dd3491f9 100644
 --- a/app/views/submissions/_bulk_send_placeholder.html.erb
 +++ b/app/views/submissions/_bulk_send_placeholder.html.erb
 @@ -6,10 +6,6 @@
@@ -152,7 +152,7 @@ index f81f653..dd3491f 100644
    </div>
  </div>
 diff --git a/app/views/submissions/_send_sms_button.html.erb b/app/views/submissions/_send_sms_button.html.erb
-index 26d90f8..4ad31a5 100644
+index 26d90f80..4ad31a56 100644
 --- a/app/views/submissions/_send_sms_button.html.erb
 +++ b/app/views/submissions/_send_sms_button.html.erb
 @@ -1,4 +1,4 @@
@@ -162,7 +162,7 @@ index 26d90f8..4ad31a5 100644
      <div class="tooltip tooltip-no-touch w-full" data-tip="<%= t('unlock_with_docuseal_pro') %>">
        <%= link_to submitter.sent_at? ? t('re_send_sms') : t('send_sms'), Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}", class: 'btn btn-sm btn-primary text-gray-400 w-full' %>
 diff --git a/app/views/templates/_embedding.html.erb b/app/views/templates/_embedding.html.erb
-index c11672f..88dab9a 100644
+index c11672f5..88dab9a4 100644
 --- a/app/views/templates/_embedding.html.erb
 +++ b/app/views/templates/_embedding.html.erb
 @@ -55,7 +55,6 @@
@@ -198,7 +198,7 @@ index c11672f..88dab9a 100644
  import { DocusealFormComponent } from '@docuseal/angular';
  
 diff --git a/app/views/templates_code_modal/_placeholder.html.erb b/app/views/templates_code_modal/_placeholder.html.erb
-index b5c69ac..b5e0b2d 100644
+index b5c69ac2..b5e0b2d7 100644
 --- a/app/views/templates_code_modal/_placeholder.html.erb
 +++ b/app/views/templates_code_modal/_placeholder.html.erb
 @@ -7,10 +7,6 @@
@@ -213,7 +213,7 @@ index b5c69ac..b5e0b2d 100644
      </div>
    </div>
 diff --git a/app/views/users/_role_select.html.erb b/app/views/users/_role_select.html.erb
-index dde2cac..09102cb 100644
+index dde2cacc..09102cbc 100644
 --- a/app/views/users/_role_select.html.erb
 +++ b/app/views/users/_role_select.html.erb
 @@ -12,7 +12,7 @@
@@ -226,7 +226,7 @@ index dde2cac..09102cb 100644
        <%= svg_icon('info_circle', class: 'w-4 h-4 inline align-text-bottom') %>
        <%= t('unlock_more_user_roles_with_docuseal_pro') %>
 diff --git a/config/initializers/zz_jt_branding.rb b/config/initializers/zz_jt_branding.rb
-index 24b99ae..98b83ef 100644
+index 24b99aef..98b83ef9 100644
 --- a/config/initializers/zz_jt_branding.rb
 +++ b/config/initializers/zz_jt_branding.rb
 @@ -1,11 +1,6 @@
@@ -243,7 +243,7 @@ index 24b99ae..98b83ef 100644
 -  I18n.backend.store_translations(:de, welcome_to_docuseal: 'Willkommen bei Jason Talge Signatur')
 -end
 diff --git a/config/locales/i18n.yml b/config/locales/i18n.yml
-index 55ae368..32d8cfa 100644
+index 55ae3683..32d8cfa6 100644
 --- a/config/locales/i18n.yml
 +++ b/config/locales/i18n.yml
 @@ -840,7 +840,7 @@ en: &en
@@ -283,7 +283,7 @@ index 55ae368..32d8cfa 100644
    doorkeeper:
      scopes:
 diff --git a/lib/docuseal.rb b/lib/docuseal.rb
-index ffb31cd..31777b0 100644
+index ffb31cdb..31777b0e 100644
 --- a/lib/docuseal.rb
 +++ b/lib/docuseal.rb
 @@ -11,7 +11,7 @@ module Docuseal
@@ -296,5 +296,5 @@ index ffb31cd..31777b0 100644
    AATL_CERT_NAME = 'docuseal_aatl'
    CONSOLE_URL = if Rails.env.development?
 -- 
-2.43.0
+2.53.0
 

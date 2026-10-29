@@ -1,4 +1,4 @@
-From b3ce6e0d007bd689a6cb4af8f2cd69e2a4ef81b9 Mon Sep 17 00:00:00 2001
+From a2609f2402430d92cb4e3ddc38fabcb4d43c2d1c Mon Sep 17 00:00:00 2001
 From: JT DocuSeal Build <kontakt@jason-talge.de>
 Date: Fri, 23 Oct 2026 19:57:20 +0200
 Subject: [PATCH 5/7] JT: Assets (Favicons, Logos, PDF-Icons, jt-theme.css)
@@ -47,7 +47,7 @@ Subject: [PATCH 5/7] JT: Assets (Favicons, Logos, PDF-Icons, jt-theme.css)
  create mode 100644 public/jt/og-image.png
 
 diff --git a/app/views/shared/_meta.html.erb b/app/views/shared/_meta.html.erb
-index 19830dc..27eecea 100644
+index 19830dc7..27eecea0 100644
 --- a/app/views/shared/_meta.html.erb
 +++ b/app/views/shared/_meta.html.erb
 @@ -26,4 +26,4 @@
@@ -2040,7 +2040,7 @@ z;9IFy)U9=`{1R-dR$BQ05(V8bg&v6G^Ph84-LLs9XJ7RTM^okC{vR^j%!29MuY>>q
 N002ovPDHLkV1kx+3?Tpj
 
 diff --git a/public/favicon.svg b/public/favicon.svg
-index 6a8ca30..f760c65 100644
+index 6a8ca304..f760c651 100644
 --- a/public/favicon.svg
 +++ b/public/favicon.svg
 @@ -1,5 +1,3 @@
@@ -2125,7 +2125,7 @@ HcmV?d00001
 
 diff --git a/public/jt/bildmarke.svg b/public/jt/bildmarke.svg
 new file mode 100644
-index 0000000..9a70cc0
+index 00000000..9a70cc0f
 --- /dev/null
 +++ b/public/jt/bildmarke.svg
 @@ -0,0 +1,3 @@
@@ -2295,7 +2295,7 @@ HcmV?d00001
 
 diff --git a/public/jt/favicon.svg b/public/jt/favicon.svg
 new file mode 100644
-index 0000000..f760c65
+index 00000000..f760c651
 --- /dev/null
 +++ b/public/jt/favicon.svg
 @@ -0,0 +1,3 @@
@@ -2570,7 +2570,7 @@ HcmV?d00001
 
 diff --git a/public/jt/jt-theme-light.css b/public/jt/jt-theme-light.css
 new file mode 100644
-index 0000000..a0bbfea
+index 00000000..a0bbfeae
 --- /dev/null
 +++ b/public/jt/jt-theme-light.css
 @@ -0,0 +1,23 @@
@@ -2599,7 +2599,7 @@ index 0000000..a0bbfea
 +label.bg-base-content.text-purple-300 { color: #9EC3E8; }
 diff --git a/public/jt/jt-theme.css b/public/jt/jt-theme.css
 new file mode 100644
-index 0000000..2e17029
+index 00000000..2e170291
 --- /dev/null
 +++ b/public/jt/jt-theme.css
 @@ -0,0 +1,79 @@
@@ -2684,7 +2684,7 @@ index 0000000..2e17029
 +.driver-popover-arrow { border-color: hsl(var(--b2)) transparent transparent transparent; }
 diff --git a/public/jt/logo-horizontal-weiss.svg b/public/jt/logo-horizontal-weiss.svg
 new file mode 100644
-index 0000000..ed7867f
+index 00000000..ed7867f4
 --- /dev/null
 +++ b/public/jt/logo-horizontal-weiss.svg
 @@ -0,0 +1,5 @@
@@ -2695,7 +2695,7 @@ index 0000000..ed7867f
 +</svg>
 diff --git a/public/jt/logo-horizontal.svg b/public/jt/logo-horizontal.svg
 new file mode 100644
-index 0000000..69bae43
+index 00000000..69bae435
 --- /dev/null
 +++ b/public/jt/logo-horizontal.svg
 @@ -0,0 +1,5 @@
@@ -3082,7 +3082,7 @@ literal 0
 HcmV?d00001
 
 diff --git a/public/logo.svg b/public/logo.svg
-index ffe9710..9a70cc0 100644
+index ffe97101..9a70cc0f 100644
 --- a/public/logo.svg
 +++ b/public/logo.svg
 @@ -1,4 +1,3 @@
@@ -3785,5 +3785,5 @@ zfVVSUJpsI&=?4=lAP3d>?^pk`z<(C_&jSBh;6DreXMz8>1-1>W4*DO7eS0y_0Q`IQ
 MRR2lUBfGc%2W^7*IRF3v
 
 -- 
-2.43.0
+2.53.0
 

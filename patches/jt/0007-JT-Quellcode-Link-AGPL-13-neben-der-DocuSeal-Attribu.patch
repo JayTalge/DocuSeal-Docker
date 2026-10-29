@@ -1,4 +1,4 @@
-From 849abc83d81f3e12820b0c475b0a91858c0c9b08 Mon Sep 17 00:00:00 2001
+From c215a6f67860f19f97a91ae15f2d34d766f59ee2 Mon Sep 17 00:00:00 2001
 From: JT DocuSeal Build <kontakt@jason-talge.de>
 Date: Fri, 23 Oct 2026 20:49:29 +0200
 Subject: [PATCH 7/7] =?UTF-8?q?JT:=20Quellcode-Link=20(AGPL=20=C2=A713)=20?=
@@ -15,7 +15,7 @@ Content-Transfer-Encoding: 8bit
  4 files changed, 11 insertions(+)
 
 diff --git a/app/javascript/submission_form/completed.vue b/app/javascript/submission_form/completed.vue
-index d44f9d2..cc46cce 100644
+index d44f9d2e..cc46cced 100644
 --- a/app/javascript/submission_form/completed.vue
 +++ b/app/javascript/submission_form/completed.vue
 @@ -106,6 +106,12 @@
@@ -32,7 +32,7 @@ index d44f9d2..cc46cce 100644
    </div>
  </template>
 diff --git a/app/javascript/submission_form/i18n.js b/app/javascript/submission_form/i18n.js
-index e349e56..73421b6 100644
+index e349e56c..73421b6a 100644
 --- a/app/javascript/submission_form/i18n.js
 +++ b/app/javascript/submission_form/i18n.js
 @@ -89,6 +89,7 @@ const en = {
@@ -52,7 +52,7 @@ index e349e56..73421b6 100644
    country_code: 'Ländervorwahl',
    use_international_format: 'Internationales Format verwenden: +1xxx',
 diff --git a/app/views/shared/_powered_by.html.erb b/app/views/shared/_powered_by.html.erb
-index dcb7925..d2f9743 100644
+index dcb79251..d2f97435 100644
 --- a/app/views/shared/_powered_by.html.erb
 +++ b/app/views/shared/_powered_by.html.erb
 @@ -1,4 +1,5 @@
@@ -62,7 +62,7 @@ index dcb7925..d2f9743 100644
 +  · <a href="https://github.com/JayTalge/DocuSeal-Docker" class="underline" target="_blank" rel="noopener"><%= t('source_code', default: 'Source code') %></a>
  </div>
 diff --git a/config/locales/i18n.yml b/config/locales/i18n.yml
-index 9d92395..60c9a40 100644
+index 9d923951..60c9a401 100644
 --- a/config/locales/i18n.yml
 +++ b/config/locales/i18n.yml
 @@ -732,6 +732,7 @@ en: &en
@@ -82,5 +82,5 @@ index 9d92395..60c9a40 100644
    opened: Geöffnet
    sent: Gesendet
 -- 
-2.43.0
+2.53.0
 
