@@ -2,19 +2,20 @@
 
 Patch sets and a build script for self-hosted [DocuSeal](https://github.com/docusealco/docuseal) instances. This repo contains only patches. The upstream code is not forked: `build.sh` clones an upstream release tag, applies one patch set with `git am` and builds the upstream `Dockerfile`, so the assets are rebuilt with the patched sources.
 
-This is the Corresponding Source of the modified versions running at [sign.jason-talge.de](https://sign.jason-talge.de) (set `jt`) and [contract.dr50.de](https://contract.dr50.de) (set `brand`) (AGPL-3.0, section 13).
+This is the Corresponding Source of the modified versions running at [contract.dr50.de](https://contract.dr50.de) and [sign.jason-talge.de](https://sign.jason-talge.de) (AGPL-3.0, section 13). Both run the same image; only the brand pack and the `BRAND_*` settings differ.
 
-| Set | Based on | Used by | Branding |
-|---|---|---|---|
-| `patches/brand/` | 3.3.4 | contract.dr50.de | at runtime: `BRAND_*` env + a mounted brand pack |
-| `patches/jt/` | 3.3.4 | sign.jason-talge.de | compiled in (Jason Talge) |
+| Set | Based on | Used by |
+|---|---|---|
+| `patches/brand/` | 3.3.4 | contract.dr50.de, sign.jason-talge.de |
+
+The former set `jt` (Jason Talge branding compiled into the image) was replaced on 2026-10-29 by `brand` with a Jason Talge brand pack. Its last images stay on GHCR as `ghcr.io/jaytalge/docuseal-jt:3.3.4-38acc21`; the patches are in the git history.
 
 ## Build
 
 GitHub Actions (`.github/workflows/build.yml`) builds every set and publishes `ghcr.io/jaytalge/docuseal-<set>` with the tags `<version>-<commit>`, `<version>` and `latest`:
 
 - daily against the latest DocuSeal release (auto-update), and on every change to `main`
-- only after a smoke test (fresh Postgres: `/up`, `/setup`; `brand`: `/healthz/brand`, brand assets; `jt`: theme)
+- only after a smoke test (fresh Postgres: `/up`, `/setup`; `brand`: `/healthz/brand`, brand assets)
 - if the patches do not apply to a new release, the run fails and `latest` stays on the last good image. Fix the patches (see Updating), then the next run publishes
 - pull requests are built and tested without publishing
 
@@ -24,7 +25,6 @@ Locally:
 
 ```sh
 ./build.sh brand 3.3.4 1     # -> local image docuseal-brand:3.3.4-1
-./build.sh jt 3.3.4 1        # -> local image docuseal-jt:3.3.4-1
 ```
 
 Use the image like `docuseal/docuseal` (same env, volumes and port 3000). The image only exists locally, so set `pull_policy: never` in Compose and exclude it from Watchtower.
@@ -103,20 +103,6 @@ Redirect URI to register at the IdP: `https://<host>/auth/oidc/callback`. Authen
 ### Self-check
 
 `GET /healthz/brand` answers JSON `{"ok":true,"checks":{"branding":"ok","oidc":"ok"}}` with 200, or 503 if something in `BRAND_HEALTHZ_EXPECT` is missing. An image without this patch set answers 404. On boot the log shows `[brand] …` and `[oidc] enabled …`, or `[brand] WARN` / `[oidc] WARN`.
-
-## Set `jt`
-
-| Patch | Content |
-|---|---|
-| 0001 | Branding views: logo, page title, meta/OG/favicons, landing page, PWA manifest, empty mail footer. Hides the DocuSeal Console, "Ask AI" and GitHub/Discord links. `product_name` via initializer |
-| 0002 | Own daisyUI theme `jt` (dark navy), builder background follows the theme |
-| 0003 | Template builder: own logo, locked Pro field tiles and pricing links removed |
-| 0004 | Settings: plans/Pro, Console, SMS and SSO menu items and "learn more" links removed. Support e-mail and some texts changed |
-| 0005 | Assets `public/jt/*`, audit trail and stamp logos |
-| 0006 | Dark mode fixes, audit trail without docuseal.com, signature preview on white |
-| 0007 | "Source code" link to this repo |
-
-Logos and images under `public/jt/` are the Jason Talge brand and are not covered by the AGPL grant for reuse as branding.
 
 ## Updating to a new DocuSeal release
 
