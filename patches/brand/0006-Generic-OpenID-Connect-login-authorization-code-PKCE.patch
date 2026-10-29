@@ -1,0 +1,530 @@
+From e3ed17835d1817d61601e996f7dd3253211e86bc Mon Sep 17 00:00:00 2001
+From: build <build@localhost>
+Date: Thu, 29 Oct 2026 17:25:31 +0100
+Subject: [PATCH 6/8] Generic OpenID Connect login (authorization code + PKCE),
+ configured by OIDC_* env
+
+Own implementation for the Community Edition, comparable to the generic OIDC
+patch in Cal.diy-Docker. It neither uses nor unlocks DocuSeal Pro (SAML) code
+and needs no new gems (jwt and faraday ship with DocuSeal). Inactive without
+OIDC_ISSUER/OIDC_CLIENT_ID/OIDC_CLIENT_SECRET.
+
+- button on the login page (OIDC_BUTTON_LABEL)
+- users are matched by verified e-mail and bound to the IdP subject
+- new users only for members of OIDC_ALLOWED_GROUPS; users that lost the group
+  are archived on their next attempt and reactivated when they are back
+- SSO-linked users cannot use password login or password reset (MFA stays
+  with the IdP), unless OIDC_ALLOW_PASSWORD_FOR_SSO_USERS=true
+- the account-wide 2FA requirement applies to password logins only
+- signing links for external signers are not affected
+---
+ app/controllers/dashboard_controller.rb       |   1 +
+ app/controllers/oidc_sessions_controller.rb   |  76 +++++
+ app/controllers/passwords_controller.rb       |   8 +
+ app/controllers/sessions_controller.rb        |  16 +
+ .../devise/sessions/_omniauthable.html.erb    |   4 +
+ config/initializers/zz_oidc_login.rb          |  39 +++
+ config/routes.rb                              |   3 +
+ lib/oidc_login.rb                             | 273 ++++++++++++++++++
+ 8 files changed, 420 insertions(+)
+ create mode 100644 app/controllers/oidc_sessions_controller.rb
+ create mode 100644 config/initializers/zz_oidc_login.rb
+ create mode 100644 lib/oidc_login.rb
+
+diff --git a/app/controllers/dashboard_controller.rb b/app/controllers/dashboard_controller.rb
+index 23df832..486380e 100644
+--- a/app/controllers/dashboard_controller.rb
++++ b/app/controllers/dashboard_controller.rb
+@@ -28,6 +28,7 @@ class DashboardController < ApplicationController
+   def maybe_redirect_mfa_setup
+     return unless signed_in?
+     return if current_user.otp_required_for_login
++    return if session[OidcLogin::SESSION_KEY]
+ 
+     return if !current_user.otp_required_for_login && !AccountConfig.exists?(value: true,
+                                                                              account_id: current_user.account_id,
+diff --git a/app/controllers/oidc_sessions_controller.rb b/app/controllers/oidc_sessions_controller.rb
+new file mode 100644
+index 0000000..f52cb52
+--- /dev/null
++++ b/app/controllers/oidc_sessions_controller.rb
+@@ -0,0 +1,76 @@
++# frozen_string_literal: true
++
++# OpenID Connect login, see lib/oidc_login.rb (DocuSeal-Docker patch set).
++class OidcSessionsController < ApplicationController
++  STATE_TTL = 10.minutes
++
++  skip_before_action :authenticate_user!
++  skip_before_action :maybe_redirect_to_setup
++  skip_authorization_check
++
++  before_action :ensure_enabled
++
++  rate_limit to: 20, within: 5.minutes, by: -> { request.remote_ip }, with: lambda {
++    redirect_to new_user_session_path, alert: I18n.t(:too_many_requests_try_again_later)
++  }
++
++  def new
++    state = SecureRandom.urlsafe_base64(32)
++    nonce = SecureRandom.urlsafe_base64(32)
++    verifier = SecureRandom.urlsafe_base64(48)
++
++    session[:oidc_state] = { 'state' => state, 'nonce' => nonce, 'verifier' => verifier, 'at' => Time.current.to_i }
++
++    redirect_to OidcLogin.authorize_url(redirect_uri:, state:, nonce:, verifier:), allow_other_host: true
++  end
++
++  def callback
++    data = session.delete(:oidc_state)
++
++    return failed(:oidc_error_state) unless valid_state?(data)
++    return failed(:oidc_error_provider, params[:error]) if params[:error].present?
++
++    tokens = OidcLogin.exchange_code(params[:code].to_s, redirect_uri:, verifier: data['verifier'])
++    claims = OidcLogin.verify_id_token(tokens['id_token'], nonce: data['nonce'])
++
++    info = OidcLogin.userinfo(tokens['access_token'])
++    raise OidcLogin::Error, 'userinfo sub mismatch' if info['sub'].present? && info['sub'] != claims['sub']
++
++    user, error = OidcLogin.resolve_user(claims.merge(info.except('sub')))
++
++    return failed(error, claims['email']) unless user
++
++    sign_in(user)
++    session[OidcLogin::SESSION_KEY] = true
++
++    Rails.logger.info("[oidc] login user=#{user.id}")
++
++    redirect_to root_path
++  rescue OidcLogin::Error, JWT::DecodeError, Faraday::Error, JSON::ParserError => e
++    Rails.logger.warn("[oidc] login failed: #{e.class}: #{e.message}")
++
++    failed(:oidc_error_generic)
++  end
++
++  private
++
++  def ensure_enabled
++    head :not_found unless OidcLogin.enabled?
++  end
++
++  def redirect_uri
++    oidc_callback_url
++  end
++
++  def valid_state?(data)
++    data.is_a?(Hash) && params[:state].present? &&
++      ActiveSupport::SecurityUtils.secure_compare(params[:state].to_s, data['state'].to_s) &&
++      data['at'].to_i > STATE_TTL.ago.to_i
++  end
++
++  def failed(key, detail = nil)
++    Rails.logger.warn("[oidc] login rejected: #{key}#{" (#{detail})" if detail.present?}")
++
++    redirect_to new_user_session_path, alert: I18n.t(key)
++  end
++end
+diff --git a/app/controllers/passwords_controller.rb b/app/controllers/passwords_controller.rb
+index e166da3..bc59584 100644
+--- a/app/controllers/passwords_controller.rb
++++ b/app/controllers/passwords_controller.rb
+@@ -12,6 +12,14 @@ class PasswordsController < Devise::PasswordsController
+   end
+ 
+   def create
++    email = params.dig(:user, :email).to_s.strip.downcase
++
++    if OidcLogin.enabled? && !OidcLogin.password_login_for_sso_users? && OidcLogin.sso_user?(User.find_by(email:))
++      Rails.logger.info('[oidc] password reset skipped for SSO user')
++
++      return redirect_to new_user_session_path, notice: t('devise.passwords.send_paranoid_instructions')
++    end
++
+     super do |resource|
+       resource.errors.clear unless Docuseal.multitenant?
+     end
+diff --git a/app/controllers/sessions_controller.rb b/app/controllers/sessions_controller.rb
+index e1dfc0b..4546885 100644
+--- a/app/controllers/sessions_controller.rb
++++ b/app/controllers/sessions_controller.rb
+@@ -9,6 +9,9 @@ class SessionsController < Devise::SessionsController
+ 
+   around_action :with_browser_locale
+ 
++  # Prepended: Devise already checks the password in require_no_authentication
++  prepend_before_action :reject_password_login_for_sso_users, only: :create
++
+   def create
+     email = sign_in_params[:email].to_s.downcase
+ 
+@@ -42,6 +45,19 @@ class SessionsController < Devise::SessionsController
+ 
+   private
+ 
++  def reject_password_login_for_sso_users
++    return unless OidcLogin.enabled? && !OidcLogin.password_login_for_sso_users?
++    return unless OidcLogin.sso_user?(User.find_by(email: params.dig(:user, :email).to_s.strip.downcase))
++
++    respond_to do |format|
++      # Runs before the locale filters, so use the account language explicitly
++      message = I18n.t(:oidc_use_sso_login, locale: Brand.default_locale)
++
++      format.html { redirect_to new_user_session_path, alert: message }
++      format.json { render json: { error: message }, status: :unprocessable_content }
++    end
++  end
++
+   def after_sign_in_path_for(...)
+     if params[:redir].present?
+       return console_redirect_index_path(redir: params[:redir]) if params[:redir].starts_with?(Docuseal::CONSOLE_URL)
+diff --git a/app/views/devise/sessions/_omniauthable.html.erb b/app/views/devise/sessions/_omniauthable.html.erb
+index e69de29..6c509f5 100644
+--- a/app/views/devise/sessions/_omniauthable.html.erb
++++ b/app/views/devise/sessions/_omniauthable.html.erb
+@@ -0,0 +1,4 @@
++<% if OidcLogin.enabled? %>
++  <div class="divider my-6"><%= t('or') %></div>
++  <%= link_to OidcLogin.button_label, oidc_login_path, class: 'white-button w-full', data: { turbo: false } %>
++<% end %>
+diff --git a/config/initializers/zz_oidc_login.rb b/config/initializers/zz_oidc_login.rb
+new file mode 100644
+index 0000000..4d7aa72
+--- /dev/null
++++ b/config/initializers/zz_oidc_login.rb
+@@ -0,0 +1,39 @@
++# frozen_string_literal: true
++
++# OpenID Connect login, see lib/oidc_login.rb (DocuSeal-Docker patch set).
++Rails.application.config.after_initialize do
++  I18n.backend.send(:init_translations) unless I18n.backend.initialized?
++
++  Brand.store_translations(:en, {
++    oidc_use_sso_login: 'This account signs in via single sign-on. Please use the SSO button.',
++    oidc_error_generic: 'Single sign-on failed. Please try again.',
++    oidc_error_state: 'The sign-in request has expired. Please try again.',
++    oidc_error_provider: 'The identity provider rejected the sign-in.',
++    oidc_error_no_email: 'The identity provider did not send an e-mail address.',
++    oidc_error_email_unverified: 'The e-mail address is not verified by the identity provider.',
++    oidc_error_subject_mismatch: 'This e-mail address belongs to a different SSO account.',
++    oidc_error_not_allowed: 'Your account is not allowed to use this application.',
++    oidc_error_archived: 'Your account has been deactivated. Please contact an administrator.',
++    oidc_error_locked: 'Your account is locked.',
++    oidc_error_no_account: 'There is no account for this e-mail address.'
++  })
++  Brand.store_translations(:de, {
++    oidc_use_sso_login: 'Dieses Konto meldet sich per Single Sign-on an. Bitte den SSO-Button verwenden.',
++    oidc_error_generic: 'Die Anmeldung per Single Sign-on ist fehlgeschlagen. Bitte erneut versuchen.',
++    oidc_error_state: 'Die Anmeldeanfrage ist abgelaufen. Bitte erneut versuchen.',
++    oidc_error_provider: 'Der Identitätsanbieter hat die Anmeldung abgelehnt.',
++    oidc_error_no_email: 'Der Identitätsanbieter hat keine E-Mail-Adresse übermittelt.',
++    oidc_error_email_unverified: 'Die E-Mail-Adresse ist beim Identitätsanbieter nicht bestätigt.',
++    oidc_error_subject_mismatch: 'Diese E-Mail-Adresse gehört zu einem anderen SSO-Konto.',
++    oidc_error_not_allowed: 'Ihr Konto ist für diese Anwendung nicht freigeschaltet.',
++    oidc_error_archived: 'Ihr Konto wurde deaktiviert. Bitte wenden Sie sich an einen Administrator.',
++    oidc_error_locked: 'Ihr Konto ist gesperrt.',
++    oidc_error_no_account: 'Für diese E-Mail-Adresse gibt es kein Konto.'
++  })
++
++  if OidcLogin.enabled?
++    Rails.logger.info("[oidc] enabled issuer=#{OidcLogin.issuer} groups=#{OidcLogin.allowed_groups.join(',').presence || '(any)'}")
++  elsif OidcLogin.partially_configured?
++    warn '[oidc] WARN OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET must all be set - SSO login is disabled'
++  end
++end
+diff --git a/config/routes.rb b/config/routes.rb
+index c6a516e..bc32af1 100644
+--- a/config/routes.rb
++++ b/config/routes.rb
+@@ -14,6 +14,9 @@ Rails.application.routes.draw do
+   get 'up' => 'rails/health#show'
+   # Corresponding Source (AGPL-3.0 section 13), see lib/brand.rb
+   get 'source' => redirect { Brand.source_url }
++  # OpenID Connect login, see lib/oidc_login.rb
++  get 'auth/oidc' => 'oidc_sessions#new', as: :oidc_login
++  get 'auth/oidc/callback' => 'oidc_sessions#callback', as: :oidc_callback
+   get 'manifest' => 'pwa#manifest'
+ 
+   devise_for :users, path: '/', only: %i[sessions passwords],
+diff --git a/lib/oidc_login.rb b/lib/oidc_login.rb
+new file mode 100644
+index 0000000..051ac34
+--- /dev/null
++++ b/lib/oidc_login.rb
+@@ -0,0 +1,273 @@
++# frozen_string_literal: true
++
++# Generic OpenID Connect login (authorization code flow with PKCE) for the
++# self-hosted Community Edition (DocuSeal-Docker patch set). Own code, it does not
++# use or unlock DocuSeal Pro features. Only the jwt and faraday gems that DocuSeal
++# already ships are used.
++#
++# Inactive unless OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET are set.
++#
++#   OIDC_ISSUER                 e.g. https://iam.example.com/application/o/contract/
++#   OIDC_CLIENT_ID / OIDC_CLIENT_SECRET
++#   OIDC_BUTTON_LABEL           login button text                       (Sign in with SSO)
++#   OIDC_SCOPES                                                         (openid email profile)
++#   OIDC_ALLOWED_GROUPS         comma separated; empty = every user the IdP lets through
++#   OIDC_GROUPS_CLAIM                                                   (groups)
++#   OIDC_CREATE_USERS           create missing users on first login     (true)
++#   OIDC_TRUST_EMAIL            accept email without email_verified=true (false)
++#   OIDC_ALLOW_PASSWORD_FOR_SSO_USERS  linked users may still use password login/reset (false)
++#
++# Users are matched by e-mail and then bound to the IdP subject (user_configs
++# key "oidc_sub"); a different subject for the same e-mail is rejected.
++module OidcLogin
++  class Error < StandardError; end
++
++  SESSION_KEY = 'oidc_login'
++  SUB_KEY = 'oidc_sub'
++  ARCHIVED_KEY = 'oidc_archived'
++  CACHE_TTL = 1.hour
++  HTTP_TIMEOUT = 10
++
++  module_function
++
++  def env(key, default = nil)
++    ENV.fetch(key, '').strip.presence || default
++  end
++
++  def enabled?
++    issuer.present? && client_id.present? && client_secret.present?
++  end
++
++  def partially_configured?
++    !enabled? && [issuer, client_id, client_secret].any?(&:present?)
++  end
++
++  def issuer
++    env('OIDC_ISSUER')
++  end
++
++  def client_id
++    env('OIDC_CLIENT_ID')
++  end
++
++  def client_secret
++    env('OIDC_CLIENT_SECRET')
++  end
++
++  def button_label
++    env('OIDC_BUTTON_LABEL', 'Sign in with SSO')
++  end
++
++  def scopes
++    env('OIDC_SCOPES', 'openid email profile')
++  end
++
++  def allowed_groups
++    env('OIDC_ALLOWED_GROUPS', '').split(',').map(&:strip).compact_blank
++  end
++
++  def groups_claim
++    env('OIDC_GROUPS_CLAIM', 'groups')
++  end
++
++  def create_users?
++    env('OIDC_CREATE_USERS', 'true') == 'true'
++  end
++
++  def trust_email?
++    env('OIDC_TRUST_EMAIL') == 'true'
++  end
++
++  def password_login_for_sso_users?
++    env('OIDC_ALLOW_PASSWORD_FOR_SSO_USERS') == 'true'
++  end
++
++  # --- provider metadata ----------------------------------------------------
++
++  def http
++    Faraday.new(request: { timeout: HTTP_TIMEOUT, open_timeout: HTTP_TIMEOUT }) do |f|
++      f.response :raise_error
++    end
++  end
++
++  def discovery(force: false)
++    @discovery = nil if force || (@discovery_at && @discovery_at < CACHE_TTL.ago)
++    @discovery ||= begin
++      url = "#{issuer.chomp('/')}/.well-known/openid-configuration"
++      data = JSON.parse(http.get(url).body)
++      %w[issuer authorization_endpoint token_endpoint jwks_uri].each do |key|
++        raise Error, "discovery document lacks #{key}" if data[key].blank?
++      end
++      @discovery_at = Time.current
++      data
++    end
++  end
++
++  def healthy?
++    enabled? && discovery.present?
++  rescue StandardError => e
++    Rails.logger.warn("[oidc] discovery failed: #{e.class}: #{e.message}")
++    false
++  end
++
++  def jwks(force: false)
++    @jwks = nil if force || (@jwks_at && @jwks_at < CACHE_TTL.ago)
++    @jwks ||= begin
++      set = JWT::JWK::Set.new(JSON.parse(http.get(discovery['jwks_uri']).body))
++      @jwks_at = Time.current
++      set
++    end
++  end
++
++  # --- flow -------------------------------------------------------------------
++
++  def code_challenge(verifier)
++    Base64.urlsafe_encode64(Digest::SHA256.digest(verifier), padding: false)
++  end
++
++  def authorize_url(redirect_uri:, state:, nonce:, verifier:)
++    query = {
++      response_type: 'code', client_id:, redirect_uri:, scope: scopes, state:, nonce:,
++      code_challenge: code_challenge(verifier), code_challenge_method: 'S256'
++    }
++
++    "#{discovery['authorization_endpoint']}?#{query.to_query}"
++  end
++
++  def exchange_code(code, redirect_uri:, verifier:)
++    resp = http.post(discovery['token_endpoint']) do |req|
++      req.headers['Authorization'] = "Basic #{Base64.strict_encode64("#{client_id}:#{client_secret}")}"
++      req.headers['Content-Type'] = 'application/x-www-form-urlencoded'
++      req.body = URI.encode_www_form(grant_type: 'authorization_code', code:, redirect_uri:, code_verifier: verifier)
++    end
++
++    JSON.parse(resp.body)
++  end
++
++  def verify_id_token(id_token, nonce:)
++    raise Error, 'no id_token in token response' if id_token.blank?
++
++    loader = lambda do |options|
++      jwks(force: true) if options[:kid_not_found]
++      jwks
++    end
++
++    claims, = JWT.decode(id_token, nil, true, algorithms: %w[RS256 ES256], jwks: loader,
++                                               iss: discovery['issuer'], verify_iss: true,
++                                               aud: client_id, verify_aud: true)
++
++    raise Error, 'nonce mismatch' unless ActiveSupport::SecurityUtils.secure_compare(claims['nonce'].to_s, nonce.to_s)
++    raise Error, 'id_token without sub' if claims['sub'].blank?
++
++    claims
++  end
++
++  def userinfo(access_token)
++    return {} if access_token.blank? || discovery['userinfo_endpoint'].blank?
++
++    JSON.parse(http.get(discovery['userinfo_endpoint'], nil, { 'Authorization' => "Bearer #{access_token}" }).body)
++  end
++
++  # --- users -------------------------------------------------------------------
++
++  def linked_sub(user)
++    UserConfig.find_by(user:, key: SUB_KEY)&.value
++  end
++
++  def sso_user?(user)
++    user.present? && linked_sub(user).present?
++  end
++
++  def groups_from(claims)
++    Array(claims[groups_claim]).map(&:to_s)
++  end
++
++  def allowed?(claims)
++    allowed_groups.empty? || groups_from(claims).intersect?(allowed_groups)
++  end
++
++  # Returns [user, nil] or [nil, error_key]
++  def resolve_user(claims)
++    email = claims['email'].to_s.strip.downcase
++    sub = claims['sub'].to_s
++
++    return [nil, :oidc_error_no_email] if email.blank?
++    return [nil, :oidc_error_email_unverified] unless trust_email? || claims['email_verified'] == true
++
++    user = User.find_by(email:)
++    linked = user && linked_sub(user)
++
++    return [nil, :oidc_error_subject_mismatch] if linked.present? && linked != sub
++
++    unless allowed?(claims)
++      archive_sso_user(user) if linked.present?
++
++      return [nil, :oidc_error_not_allowed]
++    end
++
++    return create_user(email:, sub:, claims:) unless user
++
++    if user.archived_at?
++      return [nil, :oidc_error_archived] unless UserConfig.exists?(user:, key: ARCHIVED_KEY)
++
++      user.update!(archived_at: nil)
++      UserConfig.where(user:, key: ARCHIVED_KEY).delete_all
++      Rails.logger.info("[oidc] user #{user.id} reactivated (back in an allowed group)")
++    end
++
++    if user.access_locked?
++      # The Devise lock protects the password login. A linked SSO user has none, so the
++      # lock must not block SSO (else failed password guesses could lock users out).
++      return [nil, :oidc_error_locked] if linked.blank? || password_login_for_sso_users?
++
++      user.unlock_access!
++    end
++
++    link(user, sub) if linked.blank?
++
++    [user, nil]
++  end
++
++  def create_user(email:, sub:, claims:)
++    return [nil, :oidc_error_no_account] unless create_users?
++
++    account = Account.order(:id).first
++    return [nil, :oidc_error_no_account] unless account
++
++    first_name, last_name = split_name(claims)
++
++    user = account.users.create!(email:, first_name:, last_name:, role: User::ADMIN_ROLE,
++                                 password: SecureRandom.base58(48))
++    link(user, sub)
++
++    Rails.logger.info("[oidc] user #{user.id} created on first SSO login")
++
++    [user, nil]
++  end
++
++  # Some IdPs (Authentik) send the full name as given_name and no family_name
++  def split_name(claims)
++    given = claims['given_name'].to_s.strip
++    family = claims['family_name'].to_s.strip
++    full = claims['name'].to_s.strip
++
++    return [given, family] if given.present? && family.present? && given != full
++
++    parts = (full.presence || given).split
++
++    [parts.first, parts.drop(1).join(' ').presence]
++  end
++
++  def link(user, sub)
++    UserConfig.find_or_initialize_by(user:, key: SUB_KEY).update!(value: sub)
++  end
++
++  def archive_sso_user(user)
++    return if user.archived_at?
++
++    user.update!(archived_at: Time.current)
++    UserConfig.find_or_initialize_by(user:, key: ARCHIVED_KEY).update!(value: true)
++
++    Rails.logger.info("[oidc] user #{user.id} archived (no longer in an allowed group)")
++  end
++end
+-- 
+2.53.0
+

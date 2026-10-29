@@ -1,0 +1,114 @@
+From 1ee4c97139a699be45790a14c92a36c8f85f9faa Mon Sep 17 00:00:00 2001
+From: build <build@localhost>
+Date: Thu, 29 Oct 2026 17:23:22 +0100
+Subject: [PATCH 4/8] Brand: audit trail and signed PDFs (header name, sign
+ reason, creator, band colour)
+
+From the JT patch 0006, values from lib/brand.rb. The PDF logo comes from the
+brand pack (pdf-logo.png, stamp-logo.png).
+---
+ lib/brand.rb                                    |  5 +++++
+ lib/submissions/generate_audit_trail.rb         | 11 +++++------
+ lib/submissions/generate_combined_attachment.rb |  2 +-
+ lib/submissions/generate_result_attachments.rb  |  4 ++--
+ 4 files changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/lib/brand.rb b/lib/brand.rb
+index 656059e..f0e3ac8 100644
+--- a/lib/brand.rb
++++ b/lib/brand.rb
+@@ -98,6 +98,11 @@ module Brand
+     "Signed with #{product_name}"
+   end
+ 
++  # Light band colour at the top/bottom of audit trail pages (hex without #)
++  def pdf_band_color
++    env('BRAND_PDF_BAND_COLOR', configured? ? 'F2F2F8' : 'FAF7F5').delete('#')
++  end
++
+   # URL path of a brand asset with cache buster, e.g. Brand.asset('logo.svg')
+   def asset(file)
+     "/brand/#{file}?v=#{env('BRAND_ASSET_VERSION', '1')}"
+diff --git a/lib/submissions/generate_audit_trail.rb b/lib/submissions/generate_audit_trail.rb
+index f4b6e27..120d573 100644
+--- a/lib/submissions/generate_audit_trail.rb
++++ b/lib/submissions/generate_audit_trail.rb
+@@ -44,7 +44,7 @@ module Submissions
+ 
+         io = StringIO.new
+ 
+-        document.trailer.info[:Creator] = "#{Docuseal.product_name} (#{Docuseal::PRODUCT_URL})"
++        document.trailer.info[:Creator] = Docuseal.product_name
+ 
+         if pkcs
+           sign_params = {
+@@ -138,7 +138,7 @@ module Submissions
+       composer.page_style(:default, page_size:) do |canvas, style|
+         box = canvas.context.box(:media)
+         canvas.save_graphics_state do
+-          canvas.fill_color('FAF7F5')
++          canvas.fill_color(Brand.pdf_band_color)
+                 .rectangle(0, 0, box.width, 20)
+                 .rectangle(0, box.height - 20, box.width, 20)
+                 .fill
+@@ -542,7 +542,7 @@ module Submissions
+     end
+ 
+     def sign_reason
+-      'Signed with DocuSeal.com'
++      Brand.sign_reason
+     end
+ 
+     def select_attachments(submitter)
+@@ -564,11 +564,10 @@ module Submissions
+     def add_logo(column, _submission = nil)
+       column.image(PdfIcons.logo_io, width: 40, height: 40, position: :float)
+ 
+-      column.formatted_text([{ text: 'DocuSeal',
+-                               link: Docuseal::PRODUCT_EMAIL_URL }],
++      column.formatted_text([{ text: Brand.name }],
+                             font_size: 20,
+                             font: [FONT_NAME, { variant: :bold }],
+-                            width: 100,
++                            width: 160,
+                             padding: [5, 0, 0, 8],
+                             position: :float, text_align: :left)
+     end
+diff --git a/lib/submissions/generate_combined_attachment.rb b/lib/submissions/generate_combined_attachment.rb
+index 45aadb1..57b4610 100644
+--- a/lib/submissions/generate_combined_attachment.rb
++++ b/lib/submissions/generate_combined_attachment.rb
+@@ -15,7 +15,7 @@ module Submissions
+ 
+       io = StringIO.new
+ 
+-      pdf.trailer.info[:Creator] = "#{Docuseal.product_name} (#{Docuseal::PRODUCT_URL})"
++      pdf.trailer.info[:Creator] = Docuseal.product_name
+ 
+       if Docuseal.pdf_format == 'pdf/a-3b'
+         pdf.task(:pdfa, level: '3b')
+diff --git a/lib/submissions/generate_result_attachments.rb b/lib/submissions/generate_result_attachments.rb
+index 03bee27..cb0ec1d 100644
+--- a/lib/submissions/generate_result_attachments.rb
++++ b/lib/submissions/generate_result_attachments.rb
+@@ -34,7 +34,7 @@ module Submissions
+       bold_italic: FONT_BOLD_NAME
+     }.freeze
+ 
+-    SIGN_REASON = 'Signed with DocuSeal.com'
++    SIGN_REASON = Brand.sign_reason
+ 
+     UNSUPPORTED_IMAGE_TYPES = ['image/heic', 'image/avif'].freeze
+ 
+@@ -1047,7 +1047,7 @@ module Submissions
+     end
+ 
+     def info_creator
+-      "#{Docuseal.product_name} (#{Docuseal::PRODUCT_URL})"
++      Docuseal.product_name
+     end
+ 
+     def detached_signature?(_submitter)
+-- 
+2.53.0
+

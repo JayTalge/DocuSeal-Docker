@@ -1,0 +1,77 @@
+From 3cff55ac99cd01b91f9bb69d8c67ed85b9219919 Mon Sep 17 00:00:00 2001
+From: build <build@localhost>
+Date: Thu, 29 Oct 2026 17:26:15 +0100
+Subject: [PATCH 8/8] Self-check endpoint /healthz/brand (branding pack, OIDC
+ discovery)
+
+BRAND_HEALTHZ_EXPECT=branding,oidc makes the endpoint answer 503 when the
+brand pack is incomplete or the OIDC provider is unreachable/unconfigured.
+Without the patch set the route does not exist (404). Together with the
+[brand]/[oidc] lines in the boot log this shows when an update lost the
+branding or SSO.
+---
+ app/controllers/brand_health_controller.rb | 39 ++++++++++++++++++++++
+ config/routes.rb                           |  1 +
+ 2 files changed, 40 insertions(+)
+ create mode 100644 app/controllers/brand_health_controller.rb
+
+diff --git a/app/controllers/brand_health_controller.rb b/app/controllers/brand_health_controller.rb
+new file mode 100644
+index 0000000..092990c
+--- /dev/null
++++ b/app/controllers/brand_health_controller.rb
+@@ -0,0 +1,39 @@
++# frozen_string_literal: true
++
++# GET /healthz/brand - monitoring endpoint of the DocuSeal-Docker patch set.
++#
++# BRAND_HEALTHZ_EXPECT lists what this instance must have, e.g. "branding,oidc".
++# 200 = everything expected is in place, 503 = something is missing. An image
++# without the patch set answers 404, which a monitor also reports as down.
++class BrandHealthController < ActionController::Base
++  def show
++    checks = {
++      'branding' => branding_status,
++      'oidc' => oidc_status
++    }
++
++    expected = ENV.fetch('BRAND_HEALTHZ_EXPECT', '').split(',').map(&:strip).compact_blank
++    failed = expected.reject { |name| checks[name] == 'ok' }
++
++    response.headers['Cache-Control'] = 'no-store'
++
++    render json: { ok: failed.empty?, checks:, failed:, version: Docuseal.version.presence },
++           status: failed.empty? ? :ok : :service_unavailable
++  end
++
++  private
++
++  def branding_status
++    return 'not configured' unless Brand.configured?
++
++    missing = Brand.missing_assets
++
++    missing.empty? ? 'ok' : "missing #{missing.join(', ')}"
++  end
++
++  def oidc_status
++    return 'not configured' unless OidcLogin.enabled?
++
++    OidcLogin.healthy? ? 'ok' : 'discovery failed'
++  end
++end
+diff --git a/config/routes.rb b/config/routes.rb
+index bc32af1..0819486 100644
+--- a/config/routes.rb
++++ b/config/routes.rb
+@@ -14,6 +14,7 @@ Rails.application.routes.draw do
+   get 'up' => 'rails/health#show'
+   # Corresponding Source (AGPL-3.0 section 13), see lib/brand.rb
+   get 'source' => redirect { Brand.source_url }
++  get 'healthz/brand' => 'brand_health#show'
+   # OpenID Connect login, see lib/oidc_login.rb
+   get 'auth/oidc' => 'oidc_sessions#new', as: :oidc_login
+   get 'auth/oidc/callback' => 'oidc_sessions#callback', as: :oidc_callback
+-- 
+2.53.0
+
