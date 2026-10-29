@@ -108,14 +108,14 @@ jobs:
             "docuseal-$SET:$VERSION-$REV"
           for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3000/up && break; sleep 3; done
           curl -sf -o /dev/null http://127.0.0.1:3000/up || { docker logs app | tail -50; exit 1; }
-          # fresh instance: setup page renders
+          # fresh instance: setup page renders (/sign_in redirects there, hence -L below)
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/setup)" = 200
           if [ "$SET" = brand ]; then
             curl -s http://127.0.0.1:3000/healthz/brand | tee /dev/stderr | grep -q '"ok":true'
-            curl -s http://127.0.0.1:3000/sign_in | grep -q '/brand/' || { echo "brand assets not referenced"; exit 1; }
+            curl -sL http://127.0.0.1:3000/sign_in | grep -q '/brand/' || { echo "brand assets not referenced"; exit 1; }
           fi
           if [ "$SET" = jt ]; then
-            curl -s http://127.0.0.1:3000/sign_in | grep -q 'data-theme="jt"' || { echo "jt theme missing"; exit 1; }
+            curl -sL http://127.0.0.1:3000/sign_in | grep -q 'data-theme="jt"' || { echo "jt theme missing"; exit 1; }
           fi
           docker logs app 2>&1 | grep -E '\[brand\]|\[oidc\]' || true
           echo "smoke test OK"
