@@ -11,6 +11,8 @@ This is the Corresponding Source of the modified versions running at [sign.jason
 
 ## Build
 
+GitHub Actions (`.github/workflows/build.yml`) builds every set on each change to `main` and publishes `ghcr.io/jaytalge/docuseal-<set>:<version>-<commit>` and `:<version>` after a smoke test (fresh Postgres, `/up`, `/setup`, for `brand` also `/healthz/brand`). Pull requests are built and tested without publishing. Locally:
+
 ```sh
 ./build.sh brand 3.3.4 1     # -> local image docuseal-brand:3.3.4-1
 ./build.sh jt 3.3.3 jt4      # -> local image docuseal-jt:3.3.3-jt4

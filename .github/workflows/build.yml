@@ -1,0 +1,103 @@
+name: Build images
+
+# Builds docuseal-<set> = upstream release tag + patches/<set>/*.patch with build.sh,
+# runs a smoke test against a throwaway Postgres and publishes to GHCR.
+# Pull requests only build and test. Upstream versions per set: matrix below.
+
+on:
+  push:
+    branches: [main]
+    paths: ["patches/**", "build.sh", ".github/workflows/build.yml"]
+  pull_request:
+    paths: ["patches/**", "build.sh", ".github/workflows/build.yml"]
+  workflow_dispatch:
+    inputs:
+      set:
+        description: "Patch set to build (all = every set)"
+        type: choice
+        options: [all, brand, jt]
+        default: all
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - set: brand
+            version: 3.3.4
+          - set: jt
+            version: 3.3.3
+    env:
+      SET: ${{ matrix.set }}
+      VERSION: ${{ matrix.version }}
+      IMAGE: ghcr.io/jaytalge/docuseal-${{ matrix.set }}
+      PUBLISH: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Select set
+        id: sel
+        run: |
+          if [ "${{ github.event_name }}" = workflow_dispatch ] && [ "${{ inputs.set }}" != all ] && [ "${{ inputs.set }}" != "$SET" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"; echo "skipped ($SET not selected)"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.sel.outputs.run == 'true'
+
+      - name: Build (upstream ${{ matrix.version }} + patches/${{ matrix.set }})
+        if: steps.sel.outputs.run == 'true'
+        run: |
+          REV=$(git rev-parse --short=7 HEAD)
+          echo "REV=$REV" >> "$GITHUB_ENV"
+          ./build.sh "$SET" "$VERSION" "$REV"
+
+      - name: Smoke test
+        if: steps.sel.outputs.run == 'true'
+        run: |
+          set -eu
+          docker network create smoke
+          docker run -d --name db --network smoke -e POSTGRES_USER=docuseal -e POSTGRES_PASSWORD=smoke \
+            -e POSTGRES_DB=docuseal postgres:16.15-alpine
+          for i in $(seq 1 30); do docker exec db pg_isready -U docuseal -q && break; sleep 2; done
+          docker run -d --name app --network smoke -p 3000:3000 \
+            -e DATABASE_URL=postgresql://docuseal:smoke@db:5432/docuseal \
+            -e SECRET_KEY_BASE="$(openssl rand -hex 64)" \
+            "docuseal-$SET:$VERSION-$REV"
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3000/up && break; sleep 3; done
+          curl -sf -o /dev/null http://127.0.0.1:3000/up || { docker logs app | tail -50; exit 1; }
+          # fresh instance redirects to the setup page
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/setup)" = 200
+          if [ "$SET" = brand ]; then
+            curl -s http://127.0.0.1:3000/healthz/brand | tee /dev/stderr | grep -q '"ok":true'
+            curl -s http://127.0.0.1:3000/sign_in | grep -q '/brand/' || { echo "brand assets not referenced"; exit 1; }
+          fi
+          docker logs app 2>&1 | grep -E '\[brand\]|\[oidc\]' || true
+          echo "smoke test OK"
+
+      - uses: docker/login-action@v3
+        if: steps.sel.outputs.run == 'true' && env.PUBLISH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GHCR
+        if: steps.sel.outputs.run == 'true' && env.PUBLISH == 'true'
+        run: |
+          for TAG in "$VERSION-$REV" "$VERSION"; do
+            docker tag "docuseal-$SET:$VERSION-$REV" "$IMAGE:$TAG"
+            docker push -q "$IMAGE:$TAG"
+          done
+          echo "### $IMAGE:$VERSION-$REV" >> "$GITHUB_STEP_SUMMARY"
