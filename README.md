@@ -7,13 +7,24 @@ This is the Corresponding Source of the modified versions running at [sign.jason
 | Set | Based on | Used by | Branding |
 |---|---|---|---|
 | `patches/brand/` | 3.3.4 | contract.dr50.de | at runtime: `BRAND_*` env + a mounted brand pack |
-| `patches/jt/` | 3.3.3 | sign.jason-talge.de | compiled in (Jason Talge) |
+| `patches/jt/` | 3.3.4 | sign.jason-talge.de | compiled in (Jason Talge) |
 
 ## Build
 
+GitHub Actions (`.github/workflows/build.yml`) builds every set and publishes `ghcr.io/jaytalge/docuseal-<set>` with the tags `<version>-<commit>`, `<version>` and `latest`:
+
+- daily against the latest DocuSeal release (auto-update), and on every change to `main`
+- only after a smoke test (fresh Postgres: `/up`, `/setup`; `brand`: `/healthz/brand`, brand assets; `jt`: theme)
+- if the patches do not apply to a new release, the run fails and `latest` stays on the last good image. Fix the patches (see Updating), then the next run publishes
+- pull requests are built and tested without publishing
+
+Watchtower can follow `:latest`. For a pinned deployment use `<version>-<commit>`.
+
+Locally:
+
 ```sh
 ./build.sh brand 3.3.4 1     # -> local image docuseal-brand:3.3.4-1
-./build.sh jt 3.3.3 jt4      # -> local image docuseal-jt:3.3.3-jt4
+./build.sh jt 3.3.4 1        # -> local image docuseal-jt:3.3.4-1
 ```
 
 Use the image like `docuseal/docuseal` (same env, volumes and port 3000). The image only exists locally, so set `pull_policy: never` in Compose and exclude it from Watchtower.

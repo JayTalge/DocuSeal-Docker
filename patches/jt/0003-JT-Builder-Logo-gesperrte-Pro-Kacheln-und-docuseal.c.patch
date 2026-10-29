@@ -1,4 +1,4 @@
-From 693071cde7262db294e22e0d9c1d427182721c60 Mon Sep 17 00:00:00 2001
+From 672fa2160f32d85e9535babbff54b165ed7c9196 Mon Sep 17 00:00:00 2001
 From: JT DocuSeal Build <kontakt@jason-talge.de>
 Date: Fri, 23 Oct 2026 19:56:00 +0200
 Subject: [PATCH 3/7] JT: Builder-Logo, gesperrte Pro-Kacheln und
@@ -13,7 +13,7 @@ Subject: [PATCH 3/7] JT: Builder-Logo, gesperrte Pro-Kacheln und
  5 files changed, 9 insertions(+), 28 deletions(-)
 
 diff --git a/app/javascript/template_builder/conditions_modal.vue b/app/javascript/template_builder/conditions_modal.vue
-index 6ba5fe8..5c7812d 100644
+index 6ba5fe8c..5c7812d6 100644
 --- a/app/javascript/template_builder/conditions_modal.vue
 +++ b/app/javascript/template_builder/conditions_modal.vue
 @@ -26,11 +26,7 @@
@@ -30,7 +30,7 @@ index 6ba5fe8..5c7812d 100644
          <form @submit.prevent="validateSaveAndClose">
            <div class="my-4">
 diff --git a/app/javascript/template_builder/fields.vue b/app/javascript/template_builder/fields.vue
-index 6d4bb62..f24a36b 100644
+index 6d4bb627..f24a36bb 100644
 --- a/app/javascript/template_builder/fields.vue
 +++ b/app/javascript/template_builder/fields.vue
 @@ -275,7 +275,7 @@
@@ -52,7 +52,7 @@ index 6d4bb62..f24a36b 100644
          :data-tip="t('obtain_qualified_electronic_signature_with_the_trusted_provider_click_to_learn_more')"
        >
 diff --git a/app/javascript/template_builder/formula_modal.vue b/app/javascript/template_builder/formula_modal.vue
-index e1dafff..39558de 100644
+index e1dafff9..39558def 100644
 --- a/app/javascript/template_builder/formula_modal.vue
 +++ b/app/javascript/template_builder/formula_modal.vue
 @@ -26,11 +26,7 @@
@@ -69,7 +69,7 @@ index e1dafff..39558de 100644
          <div class="flex flex-wrap mb-2 gap-y-1 pt-1">
            <button
 diff --git a/app/javascript/template_builder/logo.vue b/app/javascript/template_builder/logo.vue
-index 2366167..d5fc49e 100644
+index 23661679..d5fc49e9 100644
 --- a/app/javascript/template_builder/logo.vue
 +++ b/app/javascript/template_builder/logo.vue
 @@ -2,25 +2,14 @@
@@ -103,7 +103,7 @@ index 2366167..d5fc49e 100644
 -}
 -</script>
 diff --git a/app/javascript/template_builder/payment_settings.vue b/app/javascript/template_builder/payment_settings.vue
-index ba3dffe..fe1bfea 100644
+index ba3dffe9..fe1bfead 100644
 --- a/app/javascript/template_builder/payment_settings.vue
 +++ b/app/javascript/template_builder/payment_settings.vue
 @@ -191,7 +191,7 @@
@@ -116,5 +116,5 @@ index ba3dffe..fe1bfea 100644
          @click.stop
        >
 -- 
-2.43.0
+2.53.0
 

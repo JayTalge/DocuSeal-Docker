@@ -1,0 +1,130 @@
+name: Build images
+
+# Builds docuseal-<set> = upstream DocuSeal release + patches/<set>/*.patch (build.sh),
+# smoke-tests it against a throwaway Postgres and publishes it to GHCR.
+#
+# Auto-update: runs daily, takes the latest upstream release and builds every set whose
+# image <version>-<commit> does not exist yet (new upstream release or changed patches).
+# Only images that build AND pass the smoke test get the tag :latest, which Watchtower
+# pulls. If patches no longer apply, the run fails (GitHub mails the failure) and
+# :latest stays on the last good image.
+
+on:
+  schedule:
+    - cron: "41 3 * * *"
+  push:
+    branches: [main]
+    paths: ["patches/**", "build.sh", ".github/workflows/build.yml"]
+  pull_request:
+    paths: ["patches/**", "build.sh", ".github/workflows/build.yml"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Upstream DocuSeal tag (empty = latest release)"
+        required: false
+      force:
+        description: "Rebuild even if the image tag already exists"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: docusealco/docuseal
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - name: Resolve upstream release
+        id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT: ${{ inputs.version }}
+        run: |
+          V="${INPUT:-$(gh api "repos/$UPSTREAM/releases/latest" --jq .tag_name)}"
+          echo "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "unexpected version: $V"; exit 1; }
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Upstream release: $V" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  build:
+    needs: resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        set: [brand, jt]
+    env:
+      SET: ${{ matrix.set }}
+      VERSION: ${{ needs.resolve.outputs.version }}
+      IMAGE: ghcr.io/jaytalge/docuseal-${{ matrix.set }}
+      PUBLISH: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip if already built
+        id: check
+        env:
+          FORCE: ${{ inputs.force || github.event_name != 'schedule' }}
+        run: |
+          REV=$(git rev-parse --short=7 HEAD)
+          echo "REV=$REV" >> "$GITHUB_ENV"
+          if [ "$FORCE" != true ] && docker manifest inspect "$IMAGE:$VERSION-$REV" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "$IMAGE:$VERSION-$REV exists, nothing to do"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build (upstream ${{ needs.resolve.outputs.version }} + patches/${{ matrix.set }})
+        if: steps.check.outputs.skip == 'false'
+        run: ./build.sh "$SET" "$VERSION" "$REV"
+
+      - name: Smoke test
+        if: steps.check.outputs.skip == 'false'
+        run: |
+          set -eu
+          docker network create smoke
+          docker run -d --name db --network smoke -e POSTGRES_USER=docuseal -e POSTGRES_PASSWORD=smoke \
+            -e POSTGRES_DB=docuseal postgres:16.15-alpine
+          for i in $(seq 1 30); do docker exec db pg_isready -U docuseal -q && break; sleep 2; done
+          docker run -d --name app --network smoke -p 3000:3000 \
+            -e DATABASE_URL=postgresql://docuseal:smoke@db:5432/docuseal \
+            -e SECRET_KEY_BASE="$(openssl rand -hex 64)" \
+            "docuseal-$SET:$VERSION-$REV"
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3000/up && break; sleep 3; done
+          curl -sf -o /dev/null http://127.0.0.1:3000/up || { docker logs app | tail -50; exit 1; }
+          # fresh instance: setup page renders (/sign_in redirects there, hence -L below)
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/setup)" = 200
+          if [ "$SET" = brand ]; then
+            curl -s http://127.0.0.1:3000/healthz/brand | tee /dev/stderr | grep -q '"ok":true'
+            curl -sL http://127.0.0.1:3000/sign_in | grep -q '/brand/' || { echo "brand assets not referenced"; exit 1; }
+          fi
+          if [ "$SET" = jt ]; then
+            curl -sL http://127.0.0.1:3000/sign_in | grep -q 'data-theme="jt"' || { echo "jt theme missing"; exit 1; }
+          fi
+          docker logs app 2>&1 | grep -E '\[brand\]|\[oidc\]' || true
+          echo "smoke test OK"
+
+      - name: Push to GHCR
+        if: steps.check.outputs.skip == 'false' && env.PUBLISH == 'true'
+        run: |
+          for TAG in "$VERSION-$REV" "$VERSION" latest; do
+            docker tag "docuseal-$SET:$VERSION-$REV" "$IMAGE:$TAG"
+            docker push -q "$IMAGE:$TAG"
+          done
+          echo "Published $IMAGE:$VERSION-$REV (+ :$VERSION, :latest)" | tee -a "$GITHUB_STEP_SUMMARY"

@@ -1,4 +1,4 @@
-From 9895dd3b7cbfe512e2a26fc5c9143c7f2a85b1aa Mon Sep 17 00:00:00 2001
+From 57d2e5e9593359904f5ad26539d5e5bdbcfba9c2 Mon Sep 17 00:00:00 2001
 From: JT DocuSeal Build <kontakt@jason-talge.de>
 Date: Fri, 23 Oct 2026 20:28:01 +0200
 Subject: [PATCH 6/7] JT: Staging-Fixes (Dark-CSS, Audit-Trail-Branding,
@@ -16,7 +16,7 @@ Subject: [PATCH 6/7] JT: Staging-Fixes (Dark-CSS, Audit-Trail-Branding,
  8 files changed, 64 insertions(+), 65 deletions(-)
 
 diff --git a/app/views/esign_settings/show.html.erb b/app/views/esign_settings/show.html.erb
-index aa6882a..5d85807 100644
+index aa6882a0..5d858071 100644
 --- a/app/views/esign_settings/show.html.erb
 +++ b/app/views/esign_settings/show.html.erb
 @@ -102,7 +102,7 @@
@@ -29,7 +29,7 @@ index aa6882a..5d85807 100644
          </tbody>
        </table>
 diff --git a/app/views/shared/_meta.html.erb b/app/views/shared/_meta.html.erb
-index 27eecea..abdb400 100644
+index 27eecea0..abdb4004 100644
 --- a/app/views/shared/_meta.html.erb
 +++ b/app/views/shared/_meta.html.erb
 @@ -26,4 +26,4 @@
@@ -39,7 +39,7 @@ index 27eecea..abdb400 100644
 -<link rel="stylesheet" href="/jt/jt-theme.css?v=4">
 +<link rel="stylesheet" href="/jt/jt-theme.css?v=5">
 diff --git a/app/views/submissions/show.html.erb b/app/views/submissions/show.html.erb
-index e749af4..8a7d1de 100644
+index 0599fc36..c6ece3d9 100644
 --- a/app/views/submissions/show.html.erb
 +++ b/app/views/submissions/show.html.erb
 @@ -332,7 +332,7 @@
@@ -52,7 +52,7 @@ index e749af4..8a7d1de 100644
                        <img class="object-contain mx-auto" style="<%= 'max-' if img_height %>height: <%= field['type'] == 'signature' ? 100 : 50 %>px" height="<%= img_height %>" width="<%= attachments_index[value].metadata['width'] %>" src="<%= attachments_index[value].url(time: service_url_time) %>" loading="lazy" alt="<%= field['name'] || field['title'] || field['type'] %>">
                      </div>
 diff --git a/config/locales/i18n.yml b/config/locales/i18n.yml
-index 32d8cfa..9d92395 100644
+index 32d8cfa6..9d923951 100644
 --- a/config/locales/i18n.yml
 +++ b/config/locales/i18n.yml
 @@ -289,7 +289,7 @@ en: &en
@@ -114,7 +114,7 @@ index 32d8cfa..9d92395 100644
    works_with_claude_desktop_cursor_windsurf_vs_code_and_any_mcp_compatible_client: Funktioniert mit Claude Desktop, Cursor, Windsurf, VS Code und jedem MCP-kompatiblen Client.
    your_email_address_has_been_changed: Ihre E-Mail-Adresse wurde geändert
 diff --git a/lib/submissions/generate_audit_trail.rb b/lib/submissions/generate_audit_trail.rb
-index f4b6e27..1e70503 100644
+index f4b6e272..1e70503f 100644
 --- a/lib/submissions/generate_audit_trail.rb
 +++ b/lib/submissions/generate_audit_trail.rb
 @@ -44,7 +44,7 @@ module Submissions
@@ -159,7 +159,7 @@ index f4b6e27..1e70503 100644
                              position: :float, text_align: :left)
      end
 diff --git a/lib/submissions/generate_combined_attachment.rb b/lib/submissions/generate_combined_attachment.rb
-index 45aadb1..57b4610 100644
+index 45aadb1c..57b46101 100644
 --- a/lib/submissions/generate_combined_attachment.rb
 +++ b/lib/submissions/generate_combined_attachment.rb
 @@ -15,7 +15,7 @@ module Submissions
@@ -172,7 +172,7 @@ index 45aadb1..57b4610 100644
        if Docuseal.pdf_format == 'pdf/a-3b'
          pdf.task(:pdfa, level: '3b')
 diff --git a/lib/submissions/generate_result_attachments.rb b/lib/submissions/generate_result_attachments.rb
-index 1893361..a0ed19f 100644
+index 03bee279..7a8894ea 100644
 --- a/lib/submissions/generate_result_attachments.rb
 +++ b/lib/submissions/generate_result_attachments.rb
 @@ -34,7 +34,7 @@ module Submissions
@@ -184,7 +184,7 @@ index 1893361..a0ed19f 100644
  
      UNSUPPORTED_IMAGE_TYPES = ['image/heic', 'image/avif'].freeze
  
-@@ -1045,7 +1045,7 @@ module Submissions
+@@ -1047,7 +1047,7 @@ module Submissions
      end
  
      def info_creator
@@ -194,7 +194,7 @@ index 1893361..a0ed19f 100644
  
      def detached_signature?(_submitter)
 diff --git a/public/jt/jt-theme.css b/public/jt/jt-theme.css
-index 2e17029..df9be2f 100644
+index 2e170291..df9be2f1 100644
 --- a/public/jt/jt-theme.css
 +++ b/public/jt/jt-theme.css
 @@ -1,36 +1,10 @@
@@ -314,5 +314,5 @@ index 2e17029..df9be2f 100644
 +
 +/* Unterschrifts-/Kuerzel-Canvas und PDF-Seiten bleiben bewusst weiss */
 -- 
-2.43.0
+2.53.0
 
