@@ -17,5 +17,9 @@ cd src
 git -c user.name="DocuSeal-Docker build" -c user.email=build@localhost -c commit.gpgsign=false \
   am -q --3way "../patches/$SET"/*.patch || {
   echo "!! patches/$SET do not apply to $V - see README.md (Updating)"; exit 1; }
-docker build --pull -t "docuseal-$SET:$V-$REV" .
+docker build --pull \
+  --label org.opencontainers.image.source=https://github.com/JayTalge/DocuSeal-Docker \
+  --label org.opencontainers.image.version="$V-$REV" \
+  --label org.opencontainers.image.description="DocuSeal $V + patches/$SET (github.com/JayTalge/DocuSeal-Docker)" \
+  -t "docuseal-$SET:$V-$REV" .
 echo "OK: docuseal-$SET:$V-$REV"
