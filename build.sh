@@ -1,16 +1,20 @@
 #!/bin/sh
-# Builds docuseal-jt:<version>-<rev> = upstream release tag + patches/*.patch,
+# Builds docuseal-<set>:<version>-<rev> = upstream release tag + patches/<set>/*.patch,
 # using the upstream Dockerfile (assets are rebuilt with yarn/shakapacker).
-# Usage: ./build.sh 3.3.3 [jt1]
+#
+#   ./build.sh brand 3.3.4 b1   # generic set: branding via env + brand pack, OIDC, hardening
+#   ./build.sh jt 3.3.3 jt4     # sign.jason-talge.de (JT branding compiled in)
 set -eu
-V=${1:?upstream version, e.g. 3.3.3}
-REV=${2:-jt1}
+SET=${1:?patch set: brand or jt}
+V=${2:?upstream version, e.g. 3.3.4}
+REV=${3:-1}
 cd "$(dirname "$0")"
+[ -d "patches/$SET" ] || { echo "!! unknown patch set: $SET"; exit 1; }
 rm -rf src
 git clone -q --depth 1 --branch "$V" https://github.com/docusealco/docuseal.git src
 cd src
-git -c user.name="DocuSeal-Docker build" -c user.email=build@localhost \
-  am -q --3way ../patches/*.patch || {
-  echo "!! patches do not apply to $V - see README.md (Updating)"; exit 1; }
-docker build --pull -t "docuseal-jt:$V-$REV" .
-echo "OK: docuseal-jt:$V-$REV"
+git -c user.name="DocuSeal-Docker build" -c user.email=build@localhost -c commit.gpgsign=false \
+  am -q --3way "../patches/$SET"/*.patch || {
+  echo "!! patches/$SET do not apply to $V - see README.md (Updating)"; exit 1; }
+docker build --pull -t "docuseal-$SET:$V-$REV" .
+echo "OK: docuseal-$SET:$V-$REV"

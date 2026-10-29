@@ -1,0 +1,288 @@
+From ee1023e527205615c6adbb30f15a86422e2ee7f5 Mon Sep 17 00:00:00 2001
+From: build <build@localhost>
+Date: Thu, 29 Oct 2026 17:22:26 +0100
+Subject: [PATCH 2/8] Brand: dark daisyUI theme "brand" (BRAND_THEME=brand)
+ with dark-mode fixes
+
+Generalised from the JT patches 0002/0005/0006. Upstream's light theme stays
+the default. The template builder and dropzones use the theme background
+instead of hard-coded light colours, the signature preview stays on white.
+---
+ app/javascript/application.js                 |  2 +-
+ app/javascript/elements/dashboard_dropzone.js |  2 +-
+ app/javascript/elements/file_dropzone.js      |  2 +-
+ app/views/layouts/application.html.erb        |  2 +-
+ app/views/layouts/form.html.erb               |  2 +-
+ app/views/layouts/plain.html.erb              |  2 +-
+ app/views/shared/_meta.html.erb               |  4 +-
+ app/views/submissions/show.html.erb           |  2 +-
+ .../submit_form_draw_signature/show.html.erb  |  2 +-
+ lib/brand.rb                                  |  9 ++
+ public/brand-base/brand-dark.css              | 88 +++++++++++++++++++
+ tailwind.config.js                            | 26 ++++++
+ 12 files changed, 134 insertions(+), 9 deletions(-)
+ create mode 100644 public/brand-base/brand-dark.css
+
+diff --git a/app/javascript/application.js b/app/javascript/application.js
+index 5db6cce..7aefa32 100644
+--- a/app/javascript/application.js
++++ b/app/javascript/application.js
+@@ -230,7 +230,7 @@ safeRegisterElement('template-builder', class extends HTMLElement {
+       dateFormats: JSON.parse(this.dataset.dateFormats || '[]'),
+       autosave: this.dataset.autosave !== 'false',
+       dynamicDocuments: reactive(JSON.parse(this.dataset.dynamicDocuments || '[]')),
+-      backgroundColor: '#faf7f5',
++      backgroundColor: 'hsl(var(--b1))',
+       locale: this.dataset.locale,
+       withPhone: this.dataset.withPhone === 'true',
+       withPrefillable: template.fields?.some((f) => f.prefillable),
+diff --git a/app/javascript/elements/dashboard_dropzone.js b/app/javascript/elements/dashboard_dropzone.js
+index 8aa75c0..cb872ca 100644
+--- a/app/javascript/elements/dashboard_dropzone.js
++++ b/app/javascript/elements/dashboard_dropzone.js
+@@ -203,7 +203,7 @@ export default targetable(class extends HTMLElement {
+     if (!el) return
+ 
+     if (e.dataTransfer?.types?.includes('Files') || el.dataset.targets !== 'dashboard-dropzone.templateCards') {
+-      el.style.backgroundColor = '#F7F3F0'
++      el.style.backgroundColor = 'hsl(var(--b2))'
+ 
+       if (el.classList.contains('before:border-base-300')) {
+         el.classList.remove('before:border-base-300')
+diff --git a/app/javascript/elements/file_dropzone.js b/app/javascript/elements/file_dropzone.js
+index ad7843e..d2dc64d 100644
+--- a/app/javascript/elements/file_dropzone.js
++++ b/app/javascript/elements/file_dropzone.js
+@@ -36,7 +36,7 @@ export default actionable(targetable(class extends HTMLElement {
+ 
+   onDragover (e) {
+     if (e.dataTransfer?.types?.includes('Files')) {
+-      this.style.backgroundColor = '#F7F3F0'
++      this.style.backgroundColor = 'hsl(var(--b2))'
+       this.classList.remove('border-base-300', 'hover:bg-base-200/30')
+       this.classList.add('border-base-content/30')
+     }
+diff --git a/app/views/layouts/application.html.erb b/app/views/layouts/application.html.erb
+index a2beb04..e3837be 100644
+--- a/app/views/layouts/application.html.erb
++++ b/app/views/layouts/application.html.erb
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html data-theme="docuseal" lang="<%= I18n.locale %>">
++<html data-theme="<%= Brand.theme %>" lang="<%= I18n.locale %>">
+   <head>
+     <%= render 'layouts/head_tags' %>
+     <% if Docuseal.enable_pwa? %>
+diff --git a/app/views/layouts/form.html.erb b/app/views/layouts/form.html.erb
+index f74a290..f53f1f9 100644
+--- a/app/views/layouts/form.html.erb
++++ b/app/views/layouts/form.html.erb
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html data-theme="docuseal" lang="<%= I18n.locale %>">
++<html data-theme="<%= Brand.theme %>" lang="<%= I18n.locale %>">
+   <head>
+     <%= render 'layouts/head_tags' %>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+diff --git a/app/views/layouts/plain.html.erb b/app/views/layouts/plain.html.erb
+index 6c2f5fe..ab1c38f 100644
+--- a/app/views/layouts/plain.html.erb
++++ b/app/views/layouts/plain.html.erb
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html data-theme="docuseal" lang="<%= I18n.locale %>">
++<html data-theme="<%= Brand.theme %>" lang="<%= I18n.locale %>">
+   <head>
+     <%= render 'layouts/head_tags' %>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+diff --git a/app/views/shared/_meta.html.erb b/app/views/shared/_meta.html.erb
+index 28da814..52fb73a 100644
+--- a/app/views/shared/_meta.html.erb
++++ b/app/views/shared/_meta.html.erb
+@@ -24,5 +24,7 @@
+ <link rel="icon" type="image/png" sizes="16x16" href="<%= Brand.asset('favicon-16x16.png') %>">
+ <link rel="icon" type="image/svg+xml" href="<%= Brand.asset('favicon.svg') %>">
+ <meta name="theme-color" content="<%= Brand.theme_color %>">
+-<link rel="stylesheet" href="/brand-base/brand-dark.css?v=<%= Brand::BASE_CSS_VERSION %>">
++<% if Brand.dark? %>
++  <link rel="stylesheet" href="/brand-base/brand-dark.css?v=<%= Brand::BASE_CSS_VERSION %>">
++<% end %>
+ <link rel="stylesheet" href="<%= Brand.asset('brand.css') %>">
+diff --git a/app/views/submissions/show.html.erb b/app/views/submissions/show.html.erb
+index 0599fc3..6ae9cfd 100644
+--- a/app/views/submissions/show.html.erb
++++ b/app/views/submissions/show.html.erb
+@@ -332,7 +332,7 @@
+                 </div>
+                 <div dir="auto">
+                   <% if field['type'].in?(%w[signature initials]) %>
+-                    <div class="w-full bg-base-300 py-1">
++                    <div class="w-full bg-white brand-paper rounded py-1">
+                       <% img_height = attachments_index[value].metadata['height'] %>
+                       <img class="object-contain mx-auto" style="<%= 'max-' if img_height %>height: <%= field['type'] == 'signature' ? 100 : 50 %>px" height="<%= img_height %>" width="<%= attachments_index[value].metadata['width'] %>" src="<%= attachments_index[value].url(time: service_url_time) %>" loading="lazy" alt="<%= field['name'] || field['title'] || field['type'] %>">
+                     </div>
+diff --git a/app/views/submit_form_draw_signature/show.html.erb b/app/views/submit_form_draw_signature/show.html.erb
+index f1ffebf..892c130 100644
+--- a/app/views/submit_form_draw_signature/show.html.erb
++++ b/app/views/submit_form_draw_signature/show.html.erb
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html data-theme="docuseal" lang="en">
++<html data-theme="<%= Brand.theme %>" lang="en">
+   <head>
+     <%= render 'layouts/head_tags' %>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+diff --git a/lib/brand.rb b/lib/brand.rb
+index 26ed343..656059e 100644
+--- a/lib/brand.rb
++++ b/lib/brand.rb
+@@ -77,6 +77,15 @@ module Brand
+     env('BRAND_TERMS_URL')
+   end
+ 
++  # daisyUI theme: "docuseal" (upstream, light) or "brand" (dark, see tailwind.config.js)
++  def theme
++    env('BRAND_THEME', 'docuseal') == 'brand' ? 'brand' : 'docuseal'
++  end
++
++  def dark?
++    theme == 'brand'
++  end
++
+   def theme_color
+     env('BRAND_THEME_COLOR', '#0E0F1F')
+   end
+diff --git a/public/brand-base/brand-dark.css b/public/brand-base/brand-dark.css
+new file mode 100644
+index 0000000..c3b1ccd
+--- /dev/null
++++ b/public/brand-base/brand-dark.css
+@@ -0,0 +1,88 @@
++/* Dark-mode fixes for the daisyUI theme "brand" (DocuSeal-Docker patch set).
++   Only loaded when BRAND_THEME=brand. The theme colours themselves come from
++   tailwind.config.js and can be overridden in /brand/brand.css; the extra colours
++   used here are CSS variables with defaults below, also overridable there.
++   Keep every selector on ONE line: a line break between :not() parts is a
++   descendant combinator. PDF pages and the signature canvas stay white on purpose. */
++
++:root {
++  --brand-input: #23244A;
++  --brand-placeholder: #8486A8;
++  --brand-muted: #B9BAD3;
++  --brand-muted-2: #9596B8;
++  --brand-on-paper: #2B2F36;
++}
++
++/* PDF pages = paper: light palette inside (field values, labels, menus on the page) */
++page-container, [style*="container-type: size"] {
++  color-scheme: light;
++  --b1: 240 20% 97%; --b2: 240 18% 92%; --b3: 240 15% 87%; --bc: 238 20% 17%;
++  --n: 238 35% 17%; --nf: 238 35% 12%; --nc: 0 0% 100%;
++  --p: 240 18% 90%; --pf: 240 18% 83%; --pc: 238 20% 17%;
++  --s: 238 30% 78%; --sf: 238 30% 70%; --sc: 238 35% 17%;
++  --a: 359 77% 46%; --af: 359 78% 37%; --ac: 0 0% 100%;
++  color: hsl(var(--bc));
++}
++
++/* Fest verdrahtete helle Formularelemente -> dunkle Inputs */
++.base-input, .base-select, .base-textarea, .autocomplete, .white-button, .base-checkbox, .base-radio {
++  background-color: var(--brand-input) !important;
++  color: hsl(var(--bc)) !important;
++}
++.base-input::placeholder, .base-textarea::placeholder { color: var(--brand-placeholder); }
++.autocomplete .group { background-color: hsl(var(--b3)) !important; }
++
++/* bg-white ausserhalb der Seiten -> dunkel. Weiss bleiben: Canvas, Bilder, Unterschriftsflaechen,
++   QR-Box, Schwaerzungs-Rechtecke, dynamische Abschnitte, .brand-paper (Unterschrift-Vorschau) */
++.bg-white:not(canvas):not(img):not(.draw-canvas):not(.brand-paper):not(:has(> canvas)):not([style*="left:"]):not(.select-none.mb-4):not(.absolute.m-0\.5):not(page-container *):not([style*="container-type: size"] *) {
++  background-color: hsl(var(--b2)) !important;
++}
++.btn-outline.bg-white:not(page-container *):hover { background-color: hsl(var(--bc)) !important; }
++
++/* Helle Grau-Flaechen, Rahmen */
++.bg-gray-50, .bg-gray-100, .bg-neutral-100 { background-color: hsl(var(--b2)) !important; }
++.bg-gray-200, .bg-neutral-200 { background-color: hsl(var(--b3)) !important; }
++.hover\:bg-neutral-100:hover, .hover\:bg-neutral-200:hover, .hover\:bg-white:hover { background-color: hsl(var(--b3)) !important; }
++.border-gray-300, .border-neutral-200, .border-neutral-300, .border-neutral-400, .border-gray-400 { border-color: hsl(var(--b3)) !important; }
++
++/* Dunkle Grau-Texte lesbar machen */
++.text-gray-900, .text-gray-700 { color: hsl(var(--bc)) !important; }
++.text-gray-600 { color: var(--brand-muted) !important; }
++.text-gray-500, .text-neutral-500, .md\:text-neutral-500 { color: var(--brand-muted-2) !important; }
++.text-neutral-700:not(page-container *) { color: var(--brand-muted-2) !important; }
++
++/* Pastell-Hinweisflaechen/Chips -> transparente Toenung */
++:is(.bg-yellow-100,.bg-yellow-200,.bg-amber-100):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(234 179 8 / .18) !important; }
++:is(.bg-red-50,.bg-red-100,.bg-red-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(239 68 68 / .18) !important; }
++:is(.bg-blue-50,.bg-sky-100,.bg-sky-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(14 165 233 / .18) !important; }
++:is(.bg-lime-50,.bg-lime-100,.bg-lime-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(132 204 22 / .18) !important; }
++:is(.bg-emerald-100,.bg-emerald-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(16 185 129 / .18) !important; }
++:is(.bg-cyan-100,.bg-cyan-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(6 182 212 / .18) !important; }
++:is(.bg-indigo-100,.bg-indigo-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(99 102 241 / .22) !important; }
++:is(.bg-purple-100,.bg-purple-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(147 51 234 / .22) !important; }
++:is(.bg-pink-100,.bg-pink-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(236 72 153 / .2) !important; }
++:is(.bg-orange-100,.bg-orange-200):not(page-container *):not([style*="container-type: size"] *) { background-color: rgb(249 115 22 / .2) !important; }
++.border-yellow-200:not(page-container *) { border-color: rgb(234 179 8 / .4) !important; }
++.border-red-100:not(page-container *) { border-color: rgb(239 68 68 / .4) !important; }
++
++/* Ghost-Buttons und Dropdown-Menues in der Palette statt Grau/unsichtbar */
++.btn-ghost:not(page-container *):hover { background-color: hsl(var(--b3)); }
++.dropdown-content.menu:not(page-container *):not([style*="container-type: size"] *) { background-color: hsl(var(--b2)); border: 1px solid hsl(var(--b3)); }
++
++/* Signier-Formular: aktueller Schritt sichtbar, "Loeschen" auf der weissen Unterschriftsflaeche dunkel */
++.steps-progress-current { background-color: hsl(var(--n)) !important; border-color: hsl(var(--n)) !important; }
++.relative.select-none > .absolute.top-0\.5.right-0\.5 .btn-ghost { color: var(--brand-on-paper); }
++
++/* Avatar-Initialen (bg-base-content ist hell) */
++label.bg-base-content.text-purple-300 { color: hsl(var(--b2)); }
++
++/* Onboarding-Tour (driver.js) */
++.driver-popover { background-color: hsl(var(--b2)) !important; color: hsl(var(--bc)) !important; }
++.driver-popover-footer button { background-color: hsl(var(--b3)) !important; color: hsl(var(--bc)) !important; text-shadow: none !important; }
++.driver-popover-progress-text, .driver-popover-close-btn { color: var(--brand-muted-2) !important; }
++html .driver-popover-arrow-side-left { border-left-color: hsl(var(--b2)); }
++html .driver-popover-arrow-side-right { border-right-color: hsl(var(--b2)); }
++html .driver-popover-arrow-side-top { border-top-color: hsl(var(--b2)); }
++html .driver-popover-arrow-side-bottom { border-bottom-color: hsl(var(--b2)); }
++
++/* Unterschrifts-/Kuerzel-Canvas und PDF-Seiten bleiben bewusst weiss */
+diff --git a/tailwind.config.js b/tailwind.config.js
+index e3d5576..eaf5e69 100644
+--- a/tailwind.config.js
++++ b/tailwind.config.js
+@@ -22,6 +22,32 @@ module.exports = {
+           '--tab-border': '2px',
+           '--tab-radius': '.5rem'
+         }
++      },
++      {
++        // Dark theme for branded instances (BRAND_THEME=brand). The colours are only
++        // defaults: a brand pack overrides the daisyUI variables in public/brand/brand.css.
++        brand: {
++          'color-scheme': 'dark',
++          primary: '#33345C',
++          'primary-focus': '#3E3F68',
++          'primary-content': '#E4E5F0',
++          secondary: '#9A9CC9',
++          'secondary-focus': '#8183B8',
++          'secondary-content': '#0E0F1F',
++          accent: '#E5484B',
++          'accent-focus': '#CE1A1D',
++          'accent-content': '#FFFFFF',
++          neutral: '#CE1A1D',
++          'neutral-focus': '#A81517',
++          'neutral-content': '#FFFFFF',
++          'base-100': '#0E0F1F',
++          'base-200': '#1D1E3C',
++          'base-300': '#2A2B4F',
++          'base-content': '#E4E5F0',
++          '--rounded-btn': '1.9rem',
++          '--tab-border': '2px',
++          '--tab-radius': '.5rem'
++        }
+       }
+     ]
+   }
+-- 
+2.53.0
+
