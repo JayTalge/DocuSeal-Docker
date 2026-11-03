@@ -1,4 +1,4 @@
-From 37bf1db63a09dadeb47f79ad5d5fc0ee876a060f Mon Sep 17 00:00:00 2001
+From f67f1a5777579906fc9204961d3c76f90abe1df1 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:22:47 +0100
 Subject: [PATCH 3/8] Hide Pro upsells, DocuSeal console/plans/SMS/SSO settings
@@ -7,26 +7,22 @@ Subject: [PATCH 3/8] Hide Pro upsells, DocuSeal console/plans/SMS/SSO settings
 From the JT patches 0003/0004/0006, without brand-specific content. Pro
 features stay locked; they are only no longer advertised. The template
 builder logo comes from the brand pack.
+
+Upsell links are hidden by public/brand-base/hide-upsells.css, matched by
+their target URL, instead of rewriting the conditions in the upstream
+templates. Upstream changes those conditions often (3.3.5 added
+turbo_native_app? checks), which made this patch conflict on updates.
 ---
- .../template_builder/conditions_modal.vue      |  6 +-----
- app/javascript/template_builder/fields.vue     |  4 ++--
- .../template_builder/formula_modal.vue         |  6 +-----
- app/javascript/template_builder/logo.vue       | 18 +++---------------
- .../template_builder/payment_settings.vue      |  2 +-
- .../_default_signature_row.html.erb            |  4 +---
- app/views/esign_settings/show.html.erb         |  2 +-
- .../_reminder_placeholder.html.erb             |  4 ----
- .../_logo_placeholder.html.erb                 |  4 ----
- app/views/shared/_settings_nav.html.erb        |  8 ++++----
- app/views/sms_settings/_placeholder.html.erb   |  4 ----
- app/views/sso_settings/_placeholder.html.erb   |  4 ----
- .../_bulk_send_placeholder.html.erb            |  4 ----
- .../submissions/_send_sms_button.html.erb      |  2 +-
- app/views/templates/_embedding.html.erb        |  4 ----
- .../templates_code_modal/_placeholder.html.erb |  4 ----
- app/views/users/_role_select.html.erb          |  2 +-
- config/locales/i18n.yml                        |  8 ++++----
- 18 files changed, 20 insertions(+), 70 deletions(-)
+ .../template_builder/conditions_modal.vue     |  6 +----
+ .../template_builder/formula_modal.vue        |  6 +----
+ app/javascript/template_builder/logo.vue      | 18 +++----------
+ .../_default_signature_row.html.erb           |  4 +--
+ app/views/esign_settings/show.html.erb        |  2 +-
+ app/views/shared/_meta.html.erb               |  1 +
+ config/locales/i18n.yml                       |  8 +++---
+ public/brand-base/hide-upsells.css            | 25 +++++++++++++++++++
+ 8 files changed, 37 insertions(+), 33 deletions(-)
+ create mode 100644 public/brand-base/hide-upsells.css
 
 diff --git a/app/javascript/template_builder/conditions_modal.vue b/app/javascript/template_builder/conditions_modal.vue
 index c625f43e..ff9a7e0b 100644
@@ -45,28 +41,6 @@ index c625f43e..ff9a7e0b 100644
          </div>
          <form @submit.prevent="validateSaveAndClose">
            <div :class="inline && nativePlatform === 'android' ? 'mt-1 mb-4' : 'my-4'">
-diff --git a/app/javascript/template_builder/fields.vue b/app/javascript/template_builder/fields.vue
-index 0450855a..f24a36bb 100644
---- a/app/javascript/template_builder/fields.vue
-+++ b/app/javascript/template_builder/fields.vue
-@@ -275,7 +275,7 @@
-         </div>
-       </button>
-       <div
--        v-else-if="type == 'phone' && !nativePlatform && (fieldTypes.length === 0 || fieldTypes.includes(type))"
-+        v-else-if="false"
-         class="tooltip tooltip-bottom flex"
-         :class="{'tooltip-bottom-end': withPayment, 'tooltip-bottom': !withPayment }"
-         :data-tip="t('unlock_sms_verified_phone_number_field_with_paid_plan_use_text_field_for_phone_numbers_without_verification')"
-@@ -302,7 +302,7 @@
-         </a>
-       </div>
-       <div
--        v-else-if="withVerification === false && type == 'verification' && (fieldTypes.length === 0 || fieldTypes.includes(type))"
-+        v-else-if="false"
-         class="tooltip tooltip-bottom flex tooltip-bottom-start"
-         :data-tip="t('obtain_qualified_electronic_signature_with_the_trusted_provider_click_to_learn_more')"
-       >
 diff --git a/app/javascript/template_builder/formula_modal.vue b/app/javascript/template_builder/formula_modal.vue
 index 53ddb12a..02758bd7 100644
 --- a/app/javascript/template_builder/formula_modal.vue
@@ -114,19 +88,6 @@ index 23661679..2c46a7d0 100644
  </template>
  
  <script>
-diff --git a/app/javascript/template_builder/payment_settings.vue b/app/javascript/template_builder/payment_settings.vue
-index a84327c0..f96abad2 100644
---- a/app/javascript/template_builder/payment_settings.vue
-+++ b/app/javascript/template_builder/payment_settings.vue
-@@ -191,7 +191,7 @@
-         </form>
-       </div>
-       <div
--        v-if="isStripe && !stripeConnected"
-+        v-if="false"
-         class="px-1 pb-1.5"
-         @click.stop
-       >
 diff --git a/app/views/esign_settings/_default_signature_row.html.erb b/app/views/esign_settings/_default_signature_row.html.erb
 index 6d1e0a4f..6f5a3cb2 100644
 --- a/app/views/esign_settings/_default_signature_row.html.erb
@@ -155,195 +116,16 @@ index aa6882a0..b4b3d7be 100644
            <% end %>
          </tbody>
        </table>
-diff --git a/app/views/notifications_settings/_reminder_placeholder.html.erb b/app/views/notifications_settings/_reminder_placeholder.html.erb
-index 38b05ce5..47579e3e 100644
---- a/app/views/notifications_settings/_reminder_placeholder.html.erb
-+++ b/app/views/notifications_settings/_reminder_placeholder.html.erb
-@@ -6,10 +6,6 @@
-     </p>
-     <p>
-       <%= t('send_automatic_email_reminders_to_your_recipients') %>
--      <br>
--      <a class="link font-medium" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>" data-turbo="false">
--        <%= t('learn_more') %>
--      </a>
-     </p>
-   </div>
- </div>
-diff --git a/app/views/personalization_settings/_logo_placeholder.html.erb b/app/views/personalization_settings/_logo_placeholder.html.erb
-index 9a8358e3..5bdde3f2 100644
---- a/app/views/personalization_settings/_logo_placeholder.html.erb
-+++ b/app/views/personalization_settings/_logo_placeholder.html.erb
-@@ -6,10 +6,6 @@
-     </p>
-     <p>
-       <%= t('display_your_company_name_and_logo_when_signing_documents') %>
--      <br>
--      <a class="link font-medium" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>" data-turbo="false">
--        <%= t('learn_more') %>
--      </a>
-     </p>
-   </div>
- </div>
-diff --git a/app/views/shared/_settings_nav.html.erb b/app/views/shared/_settings_nav.html.erb
-index 4bd82656..3a0f6d90 100644
---- a/app/views/shared/_settings_nav.html.erb
-+++ b/app/views/shared/_settings_nav.html.erb
-@@ -43,7 +43,7 @@
-               <%= link_to t('storage'), settings_storage_index_path, class: 'text-base hover:bg-base-300', data: nav_link_data %>
-             </li>
-           <% end %>
--          <% if can?(:read, EncryptedConfig.new(key: 'submitter_invitation_sms', account: current_account)) && true_user == current_user && (!turbo_native_app? || can?(:manage, :sms_verification)) %>
-+          <% if false %>
-             <li>
-               <%= link_to 'SMS', settings_sms_path, class: 'text-base hover:bg-base-300', data: nav_link_data %>
-             </li>
-@@ -84,7 +84,7 @@
-             </li>
-           <% end %>
-         <% end %>
--        <% if !Docuseal.demo? && !turbo_native_app? && can?(:manage, EncryptedConfig) && (current_user != true_user || !current_account.linked_account_account) %>
-+        <% if false %>
-           <li>
-             <%= content_for(:pro_link) || link_to(Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}", class: 'text-base hover:bg-base-300', data: { turbo: false }) do %>
-               <%= t('plans') %>
-@@ -93,7 +93,7 @@
-           </li>
-         <% end %>
-         <% if !Docuseal.demo? && can?(:manage, EncryptedConfig) && (current_user == true_user || current_account.testing?) %>
--          <% unless turbo_native_app? %>
-+          <% if false %>
-             <li>
-               <%= link_to Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}#{'/test' if current_account.testing?}/api") : "#{Docuseal::CONSOLE_URL}/on_premises", class: 'text-base hover:bg-base-300', data: { turbo: false } do %>
-                 <% if Docuseal.multitenant? %> API <% else %> <%= t('console') %> <% end %>
-@@ -107,7 +107,7 @@
-               <% end %>
-             </li>
-           <% end %>
--          <% if (!Docuseal.multitenant? || can?(:manage, :saml_sso)) && can?(:read, EncryptedConfig.new(key: 'saml_configs', account: current_account)) && true_user == current_user && (!turbo_native_app? || can?(:manage, :saml_sso)) %>
-+          <% if false %>
-             <li>
-               <%= link_to 'SSO', settings_sso_index_path, class: 'text-base hover:bg-base-300', data: nav_link_data %>
-             </li>
-diff --git a/app/views/sms_settings/_placeholder.html.erb b/app/views/sms_settings/_placeholder.html.erb
-index 13f2e2ea..e20fc752 100644
---- a/app/views/sms_settings/_placeholder.html.erb
-+++ b/app/views/sms_settings/_placeholder.html.erb
-@@ -6,10 +6,6 @@
-     </p>
-     <p class="text-gray-700">
-       <%= t('unlock_with_docuseal_pro') %>
--      <br>
--      <a class="link font-medium" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>" data-turbo="false">
--        <%= t('learn_more') %>
--      </a>
-     </p>
-   </div>
- </div>
-diff --git a/app/views/sso_settings/_placeholder.html.erb b/app/views/sso_settings/_placeholder.html.erb
-index c6497097..d8bf5f48 100644
---- a/app/views/sso_settings/_placeholder.html.erb
-+++ b/app/views/sso_settings/_placeholder.html.erb
-@@ -6,10 +6,6 @@
-     </p>
-     <p class="text-gray-700">
-       <%= t('unlock_with_docuseal_pro') %>
--      <br>
--      <a class="link font-medium" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>" data-turbo="false">
--        <%= t('learn_more') %>
--      </a>
-     </p>
-   </div>
- </div>
-diff --git a/app/views/submissions/_bulk_send_placeholder.html.erb b/app/views/submissions/_bulk_send_placeholder.html.erb
-index f81f6534..dd3491f9 100644
---- a/app/views/submissions/_bulk_send_placeholder.html.erb
-+++ b/app/views/submissions/_bulk_send_placeholder.html.erb
-@@ -6,10 +6,6 @@
-     </p>
-     <p class="text-gray-700">
-       <%= t('unlock_with_docuseal_pro') %>
--      <br>
--      <a class="link font-medium" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>" data-turbo="false">
--        <%= t('learn_more') %>
--      </a>
-     </p>
-   </div>
- </div>
-diff --git a/app/views/submissions/_send_sms_button.html.erb b/app/views/submissions/_send_sms_button.html.erb
-index 7e18fed0..60627332 100644
---- a/app/views/submissions/_send_sms_button.html.erb
-+++ b/app/views/submissions/_send_sms_button.html.erb
-@@ -1,4 +1,4 @@
--<% unless turbo_native_app? %>
-+<% if false %>
-   <div class="mt-2 mb-1">
-     <div class="tooltip tooltip-no-touch w-full" data-tip="<%= t('unlock_with_docuseal_pro') %>">
-       <%= link_to submitter.sent_at? ? t('re_send_sms') : t('send_sms'), Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}", class: 'btn btn-sm btn-primary text-gray-400 w-full' %>
-diff --git a/app/views/templates/_embedding.html.erb b/app/views/templates/_embedding.html.erb
-index c11672f5..88dab9a4 100644
---- a/app/views/templates/_embedding.html.erb
-+++ b/app/views/templates/_embedding.html.erb
-@@ -55,7 +55,6 @@
- <div id="js_1" class="block my-4">
-     <div class="mockup-code overflow-hidden pb-0 mt-4">
-       <span class="top-0 right-0 absolute flex">
--        <%= link_to t('learn_more'), console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/embedding/form"), target: '_blank', data: { turbo: false }, class: 'btn btn-ghost text-gray-100 flex', rel: 'noopener' %>
-         <clipboard-copy data-text="<script src=&quot;<%= Docuseal.multitenant? ? "#{Docuseal::CDN_URL}/js/form.js" : embed_script_url(filename: 'form.js') %>&quot;></script>
- 
- <docuseal-form data-src=&quot;<%= start_form_url(slug: template.slug) %>&quot;></docuseal-form>
-@@ -88,7 +87,6 @@
- <div id="react_1" class="block my-4 hidden">
-     <div class="mockup-code overflow-hidden pb-0 mt-4">
-       <span class="top-0 right-0 absolute flex">
--        <%= link_to t('learn_more'), console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/embedding/form"), target: '_blank', data: { turbo: false }, class: 'btn btn-ghost text-gray-100 flex', rel: 'noopener' %>
-         <clipboard-copy data-text="import React from &quot;react&quot;
- import { DocusealForm } from '@docuseal/react'
- 
-@@ -135,7 +133,6 @@ export function App() {
- <div id="vue_1" class="block my-4 hidden">
-     <div class="mockup-code overflow-hidden pb-0 mt-4">
-       <span class="top-0 right-0 absolute flex">
--        <%= link_to t('learn_more'), console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/embedding/form"), target: '_blank', data: { turbo: false }, class: 'btn btn-ghost text-gray-100 flex', rel: 'noopener' %>
-         <clipboard-copy data-text="<template>
-   <DocusealForm
-     :src=&quot;'<%= start_form_url(slug: template.slug) %>'&quot;
-@@ -193,7 +190,6 @@ export default {
- <div id="angular_1" class="block my-4 hidden">
-     <div class="mockup-code overflow-hidden pb-0 mt-4">
-       <span class="top-0 right-0 absolute flex">
--        <%= link_to t('learn_more'), console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/embedding/form"), target: '_blank', data: { turbo: false }, class: 'btn btn-ghost text-gray-100 flex', rel: 'noopener' %>
-         <clipboard-copy data-text="import { Component } from '@angular/core';
- import { DocusealFormComponent } from '@docuseal/angular';
- 
-diff --git a/app/views/templates_code_modal/_placeholder.html.erb b/app/views/templates_code_modal/_placeholder.html.erb
-index 9e24d2a9..1daab51a 100644
---- a/app/views/templates_code_modal/_placeholder.html.erb
-+++ b/app/views/templates_code_modal/_placeholder.html.erb
-@@ -7,10 +7,6 @@
-       </p>
-       <p class="text-gray-700">
-         <%= t('unlock_with_docuseal_pro') %>
--        <br>
--        <a class="link font-medium" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>" data-turbo="false">
--          <%= t('learn_more') %>
--        </a>
-       </p>
-     </div>
-   </div>
-diff --git a/app/views/users/_role_select.html.erb b/app/views/users/_role_select.html.erb
-index d3fa1029..ae5c6089 100644
---- a/app/views/users/_role_select.html.erb
-+++ b/app/views/users/_role_select.html.erb
-@@ -12,7 +12,7 @@
-       </span>
-     </label>
-   <% end %>
--  <% unless turbo_native_app? %>
-+  <% if false %>
-     <a class="text-sm mt-3 px-4 py-2 bg-base-300 rounded-full block" target="_blank" href="<%= Docuseal.multitenant? ? console_redirect_index_path(redir: "#{Docuseal::CONSOLE_URL}/plans") : "#{Docuseal::CLOUD_URL}/sign_up?#{{ redir: "#{Docuseal::CONSOLE_URL}/on_premises" }.to_query}" %>">
-       <%= svg_icon('info_circle', class: 'w-4 h-4 inline align-text-bottom') %>
-       <%= t('unlock_more_user_roles_with_docuseal_pro') %>
+diff --git a/app/views/shared/_meta.html.erb b/app/views/shared/_meta.html.erb
+index 52fb73ae..d989515f 100644
+--- a/app/views/shared/_meta.html.erb
++++ b/app/views/shared/_meta.html.erb
+@@ -27,4 +27,5 @@
+ <% if Brand.dark? %>
+   <link rel="stylesheet" href="/brand-base/brand-dark.css?v=<%= Brand::BASE_CSS_VERSION %>">
+ <% end %>
++<link rel="stylesheet" href="/brand-base/hide-upsells.css?v=<%= Brand::BASE_CSS_VERSION %>">
+ <link rel="stylesheet" href="<%= Brand.asset('brand.css') %>">
 diff --git a/config/locales/i18n.yml b/config/locales/i18n.yml
 index 55ae3683..00817eb5 100644
 --- a/config/locales/i18n.yml
@@ -384,6 +166,37 @@ index 55ae3683..00817eb5 100644
    add_the_following_to_your_mcp_client_configuration: Fügen Sie Folgendes zu Ihrer MCP-Client-Konfiguration hinzu
    works_with_claude_desktop_cursor_windsurf_vs_code_and_any_mcp_compatible_client: Funktioniert mit Claude Desktop, Cursor, Windsurf, VS Code und jedem MCP-kompatiblen Client.
    your_email_address_has_been_changed: Ihre E-Mail-Adresse wurde geändert
+diff --git a/public/brand-base/hide-upsells.css b/public/brand-base/hide-upsells.css
+new file mode 100644
+index 00000000..d200599c
+--- /dev/null
++++ b/public/brand-base/hide-upsells.css
+@@ -0,0 +1,25 @@
++/* Hides DocuSeal Pro upsells (patch 0003). Pro features stay locked; they are only no longer advertised.
++   The upsell links are matched by their target URL instead of editing the upstream templates,
++   so changes to the surrounding conditions upstream do not break the patch on updates.
++   Never match Docuseal::PRODUCT_URL itself: the "Powered by DocuSeal" attribution must stay visible. */
++
++/* plans, console, embedding and "learn more" links (console_redirect, docuseal.com sign-up, console) */
++a[href*="/console_redirect"],
++a[href^="https://docuseal.com/sign_up"],
++a[href^="https://console.docuseal.com"],
++/* pricing and Pro-service links in the template builder */
++a[href^="https://www.docuseal.com/pricing"],
++a[href^="https://www.docuseal.com/qualified-electronic-signature"],
++a[href^="https://www.docuseal.com/blog/accept-payments"],
++/* settings navigation: Plans/Console items, SMS and SSO (Pro-only placeholder pages) */
++li:has(> a[href*="/console_redirect"]),
++li:has(> a[href^="https://docuseal.com/sign_up"]),
++li:has(> a[href^="https://console.docuseal.com"]),
++li:has(> a[href$="/settings/sms"]),
++li:has(> a[href$="/settings/sso"]),
++/* locked field tiles in the template builder (phone/SMS, qualified signature) and the "Send SMS" button */
++.tooltip:has(> a[href^="https://www.docuseal.com/"]),
++div:has(> .tooltip > a[href*="/console_redirect"]),
++div:has(> .tooltip > a[href^="https://docuseal.com/sign_up"]) {
++  display: none !important;
++}
 -- 
 2.53.0
 

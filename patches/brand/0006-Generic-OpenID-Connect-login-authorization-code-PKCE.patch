@@ -1,4 +1,4 @@
-From 2245b1feb4dfac84ca6fed772dcf4e5a8dddffaa Mon Sep 17 00:00:00 2001
+From b42bf6f94181ae5408d769bb298f43938ca75f38 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:25:31 +0100
 Subject: [PATCH 6/8] Generic OpenID Connect login (authorization code + PKCE),

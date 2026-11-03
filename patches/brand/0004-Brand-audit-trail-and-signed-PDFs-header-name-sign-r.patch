@@ -1,4 +1,4 @@
-From 90370726e4e599c91b1a7e366f88f1bc724c480b Mon Sep 17 00:00:00 2001
+From 9d23562482736b9c186c5ea20345c1ed03e25af3 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:23:22 +0100
 Subject: [PATCH 4/8] Brand: audit trail and signed PDFs (header name, sign
