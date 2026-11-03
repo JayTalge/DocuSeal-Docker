@@ -1,4 +1,4 @@
-From e3ed17835d1817d61601e996f7dd3253211e86bc Mon Sep 17 00:00:00 2001
+From 2245b1feb4dfac84ca6fed772dcf4e5a8dddffaa Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:25:31 +0100
 Subject: [PATCH 6/8] Generic OpenID Connect login (authorization code + PKCE),
@@ -32,7 +32,7 @@ OIDC_ISSUER/OIDC_CLIENT_ID/OIDC_CLIENT_SECRET.
  create mode 100644 lib/oidc_login.rb
 
 diff --git a/app/controllers/dashboard_controller.rb b/app/controllers/dashboard_controller.rb
-index 23df832..486380e 100644
+index 23df8322..486380e9 100644
 --- a/app/controllers/dashboard_controller.rb
 +++ b/app/controllers/dashboard_controller.rb
 @@ -28,6 +28,7 @@ class DashboardController < ApplicationController
@@ -45,7 +45,7 @@ index 23df832..486380e 100644
                                                                               account_id: current_user.account_id,
 diff --git a/app/controllers/oidc_sessions_controller.rb b/app/controllers/oidc_sessions_controller.rb
 new file mode 100644
-index 0000000..f52cb52
+index 00000000..f52cb528
 --- /dev/null
 +++ b/app/controllers/oidc_sessions_controller.rb
 @@ -0,0 +1,76 @@
@@ -126,10 +126,10 @@ index 0000000..f52cb52
 +  end
 +end
 diff --git a/app/controllers/passwords_controller.rb b/app/controllers/passwords_controller.rb
-index e166da3..bc59584 100644
+index 12240d65..04e4c07a 100644
 --- a/app/controllers/passwords_controller.rb
 +++ b/app/controllers/passwords_controller.rb
-@@ -12,6 +12,14 @@ class PasswordsController < Devise::PasswordsController
+@@ -11,6 +11,14 @@ class PasswordsController < Devise::PasswordsController
    end
  
    def create
@@ -145,7 +145,7 @@ index e166da3..bc59584 100644
        resource.errors.clear unless Docuseal.multitenant?
      end
 diff --git a/app/controllers/sessions_controller.rb b/app/controllers/sessions_controller.rb
-index e1dfc0b..4546885 100644
+index e1dfc0bd..45468851 100644
 --- a/app/controllers/sessions_controller.rb
 +++ b/app/controllers/sessions_controller.rb
 @@ -9,6 +9,9 @@ class SessionsController < Devise::SessionsController
@@ -179,7 +179,7 @@ index e1dfc0b..4546885 100644
      if params[:redir].present?
        return console_redirect_index_path(redir: params[:redir]) if params[:redir].starts_with?(Docuseal::CONSOLE_URL)
 diff --git a/app/views/devise/sessions/_omniauthable.html.erb b/app/views/devise/sessions/_omniauthable.html.erb
-index e69de29..6c509f5 100644
+index e69de29b..6c509f50 100644
 --- a/app/views/devise/sessions/_omniauthable.html.erb
 +++ b/app/views/devise/sessions/_omniauthable.html.erb
 @@ -0,0 +1,4 @@
@@ -189,7 +189,7 @@ index e69de29..6c509f5 100644
 +<% end %>
 diff --git a/config/initializers/zz_oidc_login.rb b/config/initializers/zz_oidc_login.rb
 new file mode 100644
-index 0000000..4d7aa72
+index 00000000..4d7aa721
 --- /dev/null
 +++ b/config/initializers/zz_oidc_login.rb
 @@ -0,0 +1,39 @@
@@ -233,7 +233,7 @@ index 0000000..4d7aa72
 +  end
 +end
 diff --git a/config/routes.rb b/config/routes.rb
-index c6a516e..bc32af1 100644
+index c6a516e7..bc32af16 100644
 --- a/config/routes.rb
 +++ b/config/routes.rb
 @@ -14,6 +14,9 @@ Rails.application.routes.draw do
@@ -248,7 +248,7 @@ index c6a516e..bc32af1 100644
    devise_for :users, path: '/', only: %i[sessions passwords],
 diff --git a/lib/oidc_login.rb b/lib/oidc_login.rb
 new file mode 100644
-index 0000000..051ac34
+index 00000000..051ac34a
 --- /dev/null
 +++ b/lib/oidc_login.rb
 @@ -0,0 +1,273 @@

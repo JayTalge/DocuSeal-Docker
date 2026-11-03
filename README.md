@@ -6,7 +6,7 @@ This is the Corresponding Source of the modified versions running at [contract.d
 
 | Set | Based on | Used by |
 |---|---|---|
-| `patches/brand/` | 3.3.4 | contract.dr50.de, sign.jason-talge.de |
+| `patches/brand/` | 3.3.5 | contract.dr50.de, sign.jason-talge.de |
 
 The former set `jt` (Jason Talge branding compiled into the image) was replaced on 2026-10-29 by `brand` with a Jason Talge brand pack. Its last images stay on GHCR as `ghcr.io/jaytalge/docuseal-jt:3.3.4-38acc21`; the patches are in the git history.
 
@@ -24,7 +24,7 @@ Watchtower can follow `:latest`. For a pinned deployment use `<version>-<commit>
 Locally:
 
 ```sh
-./build.sh brand 3.3.4 1     # -> local image docuseal-brand:3.3.4-1
+./build.sh brand 3.3.5 1     # -> local image docuseal-brand:3.3.5-1
 ```
 
 Use the image like `docuseal/docuseal` (same env, volumes and port 3000). The image only exists locally, so set `pull_policy: never` in Compose and exclude it from Watchtower.

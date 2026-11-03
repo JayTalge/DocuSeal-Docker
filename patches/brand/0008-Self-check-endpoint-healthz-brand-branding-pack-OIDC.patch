@@ -1,4 +1,4 @@
-From 3cff55ac99cd01b91f9bb69d8c67ed85b9219919 Mon Sep 17 00:00:00 2001
+From 681f821a2fd46860ef54e5dd5e48d236d91ad9da Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:26:15 +0100
 Subject: [PATCH 8/8] Self-check endpoint /healthz/brand (branding pack, OIDC
@@ -17,7 +17,7 @@ branding or SSO.
 
 diff --git a/app/controllers/brand_health_controller.rb b/app/controllers/brand_health_controller.rb
 new file mode 100644
-index 0000000..092990c
+index 00000000..092990c3
 --- /dev/null
 +++ b/app/controllers/brand_health_controller.rb
 @@ -0,0 +1,39 @@
@@ -61,7 +61,7 @@ index 0000000..092990c
 +  end
 +end
 diff --git a/config/routes.rb b/config/routes.rb
-index bc32af1..0819486 100644
+index bc32af16..0819486d 100644
 --- a/config/routes.rb
 +++ b/config/routes.rb
 @@ -14,6 +14,7 @@ Rails.application.routes.draw do

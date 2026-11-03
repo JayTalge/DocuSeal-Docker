@@ -2,10 +2,10 @@
 # Builds docuseal-<set>:<version>-<rev> = upstream release tag + patches/<set>/*.patch,
 # using the upstream Dockerfile (assets are rebuilt with yarn/shakapacker).
 #
-#   ./build.sh brand 3.3.4 1    # branding via env + brand pack, OIDC, hardening
+#   ./build.sh brand 3.3.5 1    # branding via env + brand pack, OIDC, hardening
 set -eu
 SET=${1:?patch set, e.g. brand}
-V=${2:?upstream version, e.g. 3.3.4}
+V=${2:?upstream version, e.g. 3.3.5}
 REV=${3:-1}
 cd "$(dirname "$0")"
 [ -d "patches/$SET" ] || { echo "!! unknown patch set: $SET"; exit 1; }

@@ -1,4 +1,4 @@
-From 1ee4c97139a699be45790a14c92a36c8f85f9faa Mon Sep 17 00:00:00 2001
+From 90370726e4e599c91b1a7e366f88f1bc724c480b Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:23:22 +0100
 Subject: [PATCH 4/8] Brand: audit trail and signed PDFs (header name, sign
@@ -14,7 +14,7 @@ brand pack (pdf-logo.png, stamp-logo.png).
  4 files changed, 13 insertions(+), 9 deletions(-)
 
 diff --git a/lib/brand.rb b/lib/brand.rb
-index 656059e..f0e3ac8 100644
+index 656059e3..f0e3ac8d 100644
 --- a/lib/brand.rb
 +++ b/lib/brand.rb
 @@ -98,6 +98,11 @@ module Brand
@@ -30,7 +30,7 @@ index 656059e..f0e3ac8 100644
    def asset(file)
      "/brand/#{file}?v=#{env('BRAND_ASSET_VERSION', '1')}"
 diff --git a/lib/submissions/generate_audit_trail.rb b/lib/submissions/generate_audit_trail.rb
-index f4b6e27..120d573 100644
+index 9b01bdd5..608d6b18 100644
 --- a/lib/submissions/generate_audit_trail.rb
 +++ b/lib/submissions/generate_audit_trail.rb
 @@ -44,7 +44,7 @@ module Submissions
@@ -51,7 +51,7 @@ index f4b6e27..120d573 100644
                  .rectangle(0, 0, box.width, 20)
                  .rectangle(0, box.height - 20, box.width, 20)
                  .fill
-@@ -542,7 +542,7 @@ module Submissions
+@@ -545,7 +545,7 @@ module Submissions
      end
  
      def sign_reason
@@ -60,7 +60,7 @@ index f4b6e27..120d573 100644
      end
  
      def select_attachments(submitter)
-@@ -564,11 +564,10 @@ module Submissions
+@@ -567,11 +567,10 @@ module Submissions
      def add_logo(column, _submission = nil)
        column.image(PdfIcons.logo_io, width: 40, height: 40, position: :float)
  
@@ -75,7 +75,7 @@ index f4b6e27..120d573 100644
                              position: :float, text_align: :left)
      end
 diff --git a/lib/submissions/generate_combined_attachment.rb b/lib/submissions/generate_combined_attachment.rb
-index 45aadb1..57b4610 100644
+index 45aadb1c..57b46101 100644
 --- a/lib/submissions/generate_combined_attachment.rb
 +++ b/lib/submissions/generate_combined_attachment.rb
 @@ -15,7 +15,7 @@ module Submissions
@@ -88,7 +88,7 @@ index 45aadb1..57b4610 100644
        if Docuseal.pdf_format == 'pdf/a-3b'
          pdf.task(:pdfa, level: '3b')
 diff --git a/lib/submissions/generate_result_attachments.rb b/lib/submissions/generate_result_attachments.rb
-index 03bee27..cb0ec1d 100644
+index 03bee279..cb0ec1dc 100644
 --- a/lib/submissions/generate_result_attachments.rb
 +++ b/lib/submissions/generate_result_attachments.rb
 @@ -34,7 +34,7 @@ module Submissions
