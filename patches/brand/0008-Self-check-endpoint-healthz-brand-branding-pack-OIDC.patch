@@ -1,4 +1,4 @@
-From 681f821a2fd46860ef54e5dd5e48d236d91ad9da Mon Sep 17 00:00:00 2001
+From c7df84025e5e00c22ed841469ba905475b2f5e86 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:26:15 +0100
 Subject: [PATCH 8/8] Self-check endpoint /healthz/brand (branding pack, OIDC
