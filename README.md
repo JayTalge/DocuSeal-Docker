@@ -12,7 +12,7 @@ This is the Corresponding Source of the modified DocuSeal instances run with the
 
 GitHub Actions (`.github/workflows/build.yml`) builds every set and publishes `ghcr.io/jaytalge/docuseal-<set>` with the tags `<version>-<commit>`, `<version>` and `latest`:
 
-- daily against the latest DocuSeal release (auto-update), and on every change to `main`
+- daily against the latest DocuSeal release (auto-update), and on every change to `master`
 - only after a smoke test (fresh Postgres: `/up`, `/setup`; `brand`: `/healthz/brand`, brand assets)
 - a new release is handled by `git rebase --onto`: the patches are applied to the release in `patches/<set>/BASE` and moved to the new one with a 3-way merge, so upstream changes around the patched lines do not stop the build
 - only on a genuine conflict the run fails and `latest` stays on the last good image. Fix the patches (see Updating), then the next run publishes
