@@ -1,4 +1,4 @@
-From bc62323e220c7b9abb182fd97b058016695c21c9 Mon Sep 17 00:00:00 2001
+From 0e33a5554b09e2e473abc61654d34eed2a765f97 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:21:30 +0100
 Subject: [PATCH 1/8] Brand: runtime branding via BRAND_* env and public/brand
@@ -64,7 +64,7 @@ upgrade button stay hidden. The DocuSeal attribution stays (AGPL-3.0 7b).
  create mode 100644 public/brand/stamp-logo.png
 
 diff --git a/app/views/layouts/_head_tags.html.erb b/app/views/layouts/_head_tags.html.erb
-index cfb72a1..c4959f2 100644
+index cfb72a18..c4959f2f 100644
 --- a/app/views/layouts/_head_tags.html.erb
 +++ b/app/views/layouts/_head_tags.html.erb
 @@ -1,5 +1,5 @@
@@ -75,7 +75,7 @@ index cfb72a1..c4959f2 100644
  <%= render 'shared/meta' %>
  <% if turbo_native_app? %>
 diff --git a/app/views/pages/landing.html.erb b/app/views/pages/landing.html.erb
-index 78cc823..d8a565d 100644
+index 78cc823e..d8a565d4 100644
 --- a/app/views/pages/landing.html.erb
 +++ b/app/views/pages/landing.html.erb
 @@ -1,79 +1,17 @@
@@ -172,7 +172,7 @@ index 78cc823..d8a565d 100644
 -<%= render 'shared/attribution', with_counter: true %>
 +<%= render 'shared/attribution' %>
 diff --git a/app/views/pwa/manifest.json.erb b/app/views/pwa/manifest.json.erb
-index 6802206..1750547 100644
+index 68022061..1750547f 100644
 --- a/app/views/pwa/manifest.json.erb
 +++ b/app/views/pwa/manifest.json.erb
 @@ -1,25 +1,18 @@
@@ -211,7 +211,7 @@ index 6802206..1750547 100644
  }
 diff --git a/app/views/shared/_brand_legal_links.html.erb b/app/views/shared/_brand_legal_links.html.erb
 new file mode 100644
-index 0000000..a231fa7
+index 00000000..a231fa71
 --- /dev/null
 +++ b/app/views/shared/_brand_legal_links.html.erb
 @@ -0,0 +1,8 @@
@@ -224,7 +224,7 @@ index 0000000..a231fa7
 +  </p>
 +<% end %>
 diff --git a/app/views/shared/_email_attribution.html.erb b/app/views/shared/_email_attribution.html.erb
-index e1612eb..cb85098 100644
+index e1612eb7..cb850985 100644
 --- a/app/views/shared/_email_attribution.html.erb
 +++ b/app/views/shared/_email_attribution.html.erb
 @@ -1,12 +1,11 @@
@@ -252,7 +252,7 @@ index e1612eb..cb85098 100644
 +  </p>
 +<% end %>
 diff --git a/app/views/shared/_github.html.erb b/app/views/shared/_github.html.erb
-index be9d7c0..e69de29 100644
+index be9d7c0b..e69de29b 100644
 --- a/app/views/shared/_github.html.erb
 +++ b/app/views/shared/_github.html.erb
 @@ -1,6 +0,0 @@
@@ -263,7 +263,7 @@ index be9d7c0..e69de29 100644
 -  </span>
 -</a>
 diff --git a/app/views/shared/_github_button.html.erb b/app/views/shared/_github_button.html.erb
-index 5bb4bdd..e69de29 100644
+index 5bb4bdde..e69de29b 100644
 --- a/app/views/shared/_github_button.html.erb
 +++ b/app/views/shared/_github_button.html.erb
 @@ -1,10 +0,0 @@
@@ -278,14 +278,14 @@ index 5bb4bdd..e69de29 100644
 -  </span>
 -</a>
 diff --git a/app/views/shared/_html_title.html.erb b/app/views/shared/_html_title.html.erb
-index af582b3..b3405a4 100644
+index af582b38..b3405a40 100644
 --- a/app/views/shared/_html_title.html.erb
 +++ b/app/views/shared/_html_title.html.erb
 @@ -1 +1 @@
 -<% content_for(:html_title, "#{title} | DocuSeal") %>
 +<% content_for(:html_title, "#{title} | #{Brand.name}") %>
 diff --git a/app/views/shared/_logo.html.erb b/app/views/shared/_logo.html.erb
-index 57e6e0d..fc0d385 100644
+index 57e6e0d9..fc0d385a 100644
 --- a/app/views/shared/_logo.html.erb
 +++ b/app/views/shared/_logo.html.erb
 @@ -1,4 +1 @@
@@ -295,7 +295,7 @@ index 57e6e0d..fc0d385 100644
 -</svg>
 +<img class="<%= local_assigns[:class] %>" src="<%= Brand.asset('icon.svg') %>" alt="<%= Brand.name %>" height="<%= local_assigns.fetch(:height, '37') %>" width="<%= local_assigns.fetch(:width, '37') %>">
 diff --git a/app/views/shared/_meta.html.erb b/app/views/shared/_meta.html.erb
-index a6d492f..28da814 100644
+index a6d492f9..28da8143 100644
 --- a/app/views/shared/_meta.html.erb
 +++ b/app/views/shared/_meta.html.erb
 @@ -1,31 +1,28 @@
@@ -343,7 +343,7 @@ index a6d492f..28da814 100644
 +<link rel="stylesheet" href="/brand-base/brand-dark.css?v=<%= Brand::BASE_CSS_VERSION %>">
 +<link rel="stylesheet" href="<%= Brand.asset('brand.css') %>">
 diff --git a/app/views/shared/_navbar.html.erb b/app/views/shared/_navbar.html.erb
-index 36e165d..ff38a1d 100644
+index 36e165dc..ff38a1d0 100644
 --- a/app/views/shared/_navbar.html.erb
 +++ b/app/views/shared/_navbar.html.erb
 @@ -40,7 +40,7 @@
@@ -365,7 +365,7 @@ index 36e165d..ff38a1d 100644
                <%= link_to Docuseal::CHATGPT_URL, target: 'blank', class: 'flex items-center' do %>
                  <%= svg_icon('sparkles', class: 'w-5 h-5 flex-shrink-0 stroke-2') %>
 diff --git a/app/views/shared/_navbar_buttons.html.erb b/app/views/shared/_navbar_buttons.html.erb
-index 056f339..242af66 100644
+index 056f3397..242af660 100644
 --- a/app/views/shared/_navbar_buttons.html.erb
 +++ b/app/views/shared/_navbar_buttons.html.erb
 @@ -1,8 +1,3 @@
@@ -378,7 +378,7 @@ index 056f339..242af66 100644
 -  <span class="hidden md:inline-flex h-3 border-r border-base-content"></span>
  <% end %>
 diff --git a/app/views/shared/_powered_by.html.erb b/app/views/shared/_powered_by.html.erb
-index dd0ee3f..dcb7925 100644
+index dd0ee3fd..dcb79251 100644
 --- a/app/views/shared/_powered_by.html.erb
 +++ b/app/views/shared/_powered_by.html.erb
 @@ -1,13 +1,4 @@
@@ -398,7 +398,7 @@ index dd0ee3f..dcb7925 100644
 +  <a href="<%= Docuseal::PRODUCT_URL %><%= local_assigns[:link_path] %>" class="underline">DocuSeal</a> - <%= t('open_source_documents_software') %>
  </div>
 diff --git a/app/views/shared/_settings_nav.html.erb b/app/views/shared/_settings_nav.html.erb
-index 0dc5a83..cae99b5 100644
+index 75345650..4bd82656 100644
 --- a/app/views/shared/_settings_nav.html.erb
 +++ b/app/views/shared/_settings_nav.html.erb
 @@ -135,7 +135,7 @@
@@ -411,7 +411,7 @@ index 0dc5a83..cae99b5 100644
          <% unless turbo_native_app? %>
            <div class="text-sm mt-3">
 diff --git a/app/views/shared/_title.html.erb b/app/views/shared/_title.html.erb
-index 9830a7c..746cf7e 100644
+index 9830a7ca..746cf7e2 100644
 --- a/app/views/shared/_title.html.erb
 +++ b/app/views/shared/_title.html.erb
 @@ -1,2 +1 @@
@@ -419,7 +419,7 @@ index 9830a7c..746cf7e 100644
 -<span>DocuSeal</span>
 +<img src="<%= Brand.asset('logo.svg') %>" alt="<%= Brand.name %>" style="height: 36px; width: auto;">
 diff --git a/app/views/start_form/_docuseal_logo.html.erb b/app/views/start_form/_docuseal_logo.html.erb
-index 735c607..a3b9c80 100644
+index 735c607c..a3b9c802 100644
 --- a/app/views/start_form/_docuseal_logo.html.erb
 +++ b/app/views/start_form/_docuseal_logo.html.erb
 @@ -1,6 +1,3 @@
@@ -431,7 +431,7 @@ index 735c607..a3b9c80 100644
 +  <img src="<%= Brand.asset('logo.svg') %>" alt="<%= Brand.name %>" style="height: 48px; width: auto; max-width: 100%;">
  </a>
 diff --git a/app/views/submit_form/_docuseal_logo.html.erb b/app/views/submit_form/_docuseal_logo.html.erb
-index 645f7fc..ecf052a 100644
+index 645f7fc5..ecf052ad 100644
 --- a/app/views/submit_form/_docuseal_logo.html.erb
 +++ b/app/views/submit_form/_docuseal_logo.html.erb
 @@ -1,4 +1,3 @@
@@ -442,7 +442,7 @@ index 645f7fc..ecf052a 100644
 +  <img src="<%= Brand.asset('logo.svg') %>" alt="<%= Brand.name %>" style="height: 40px; width: auto; max-width: 100%;">
  </a>
 diff --git a/app/views/templates_share_link_qr/_logo.html.erb b/app/views/templates_share_link_qr/_logo.html.erb
-index 067e322..746cf7e 100644
+index 067e3227..746cf7e2 100644
 --- a/app/views/templates_share_link_qr/_logo.html.erb
 +++ b/app/views/templates_share_link_qr/_logo.html.erb
 @@ -1,2 +1 @@
@@ -451,7 +451,7 @@ index 067e322..746cf7e 100644
 +<img src="<%= Brand.asset('logo.svg') %>" alt="<%= Brand.name %>" style="height: 36px; width: auto;">
 diff --git a/config/initializers/zz_brand.rb b/config/initializers/zz_brand.rb
 new file mode 100644
-index 0000000..022e2ee
+index 00000000..022e2eec
 --- /dev/null
 +++ b/config/initializers/zz_brand.rb
 @@ -0,0 +1,35 @@
@@ -492,7 +492,7 @@ index 0000000..022e2ee
 +end
 diff --git a/lib/brand.rb b/lib/brand.rb
 new file mode 100644
-index 0000000..26ed343
+index 00000000..26ed343b
 --- /dev/null
 +++ b/lib/brand.rb
 @@ -0,0 +1,138 @@
@@ -635,7 +635,7 @@ index 0000000..26ed343
 +  end
 +end
 diff --git a/lib/docuseal.rb b/lib/docuseal.rb
-index ffb31cd..54aba02 100644
+index ffb31cdb..54aba02f 100644
 --- a/lib/docuseal.rb
 +++ b/lib/docuseal.rb
 @@ -11,7 +11,7 @@ module Docuseal
@@ -648,7 +648,7 @@ index ffb31cd..54aba02 100644
    AATL_CERT_NAME = 'docuseal_aatl'
    CONSOLE_URL = if Rails.env.development?
 diff --git a/lib/pdf_icons.rb b/lib/pdf_icons.rb
-index d9beab6..9b16ed4 100644
+index d9beab6e..9b16ed46 100644
 --- a/lib/pdf_icons.rb
 +++ b/lib/pdf_icons.rb
 @@ -33,10 +33,10 @@ module PdfIcons
@@ -881,7 +881,7 @@ HcmV?d00001
 
 diff --git a/public/brand/brand.css b/public/brand/brand.css
 new file mode 100644
-index 0000000..20d6f3f
+index 00000000..20d6f3f0
 --- /dev/null
 +++ b/public/brand/brand.css
 @@ -0,0 +1 @@
@@ -957,7 +957,7 @@ HcmV?d00001
 
 diff --git a/public/brand/favicon.svg b/public/brand/favicon.svg
 new file mode 100644
-index 0000000..6a8ca30
+index 00000000..6a8ca304
 --- /dev/null
 +++ b/public/brand/favicon.svg
 @@ -0,0 +1,5 @@
@@ -1398,7 +1398,7 @@ HcmV?d00001
 
 diff --git a/public/brand/icon.svg b/public/brand/icon.svg
 new file mode 100644
-index 0000000..6a8ca30
+index 00000000..6a8ca304
 --- /dev/null
 +++ b/public/brand/icon.svg
 @@ -0,0 +1,5 @@
@@ -1409,7 +1409,7 @@ index 0000000..6a8ca30
 +</svg>
 diff --git a/public/brand/logo-light.svg b/public/brand/logo-light.svg
 new file mode 100644
-index 0000000..ffe9710
+index 00000000..ffe97101
 --- /dev/null
 +++ b/public/brand/logo-light.svg
 @@ -0,0 +1,4 @@
@@ -1419,7 +1419,7 @@ index 0000000..ffe9710
 +</svg>
 diff --git a/public/brand/logo.svg b/public/brand/logo.svg
 new file mode 100644
-index 0000000..ffe9710
+index 00000000..ffe97101
 --- /dev/null
 +++ b/public/brand/logo.svg
 @@ -0,0 +1,4 @@
