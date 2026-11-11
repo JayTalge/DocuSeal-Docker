@@ -1,4 +1,4 @@
-From 5b03d3c463ab4e3192c3d895ccb379ea8edef6c9 Mon Sep 17 00:00:00 2001
+From 3c622345cc17f13203c1d914abe77fa4d0f0a769 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:22:26 +0100
 Subject: [PATCH 2/8] Brand: dark daisyUI theme "brand" (BRAND_THEME=brand)
@@ -63,7 +63,7 @@ index ad7843e6..d2dc64d0 100644
        this.classList.add('border-base-content/30')
      }
 diff --git a/app/views/layouts/application.html.erb b/app/views/layouts/application.html.erb
-index a2beb046..e3837be1 100644
+index d42d6677..8973837a 100644
 --- a/app/views/layouts/application.html.erb
 +++ b/app/views/layouts/application.html.erb
 @@ -1,5 +1,5 @@
@@ -109,7 +109,7 @@ index 28da8143..52fb73ae 100644
 +<% end %>
  <link rel="stylesheet" href="<%= Brand.asset('brand.css') %>">
 diff --git a/app/views/submissions/show.html.erb b/app/views/submissions/show.html.erb
-index 0599fc36..6ae9cfdd 100644
+index 5d640ca2..b0eb0ec7 100644
 --- a/app/views/submissions/show.html.erb
 +++ b/app/views/submissions/show.html.erb
 @@ -332,7 +332,7 @@
@@ -284,5 +284,5 @@ index e3d5576f..eaf5e69e 100644
      ]
    }
 -- 
-2.53.0
+2.54.0 (Apple Git-157)
 

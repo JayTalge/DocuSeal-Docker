@@ -1,4 +1,4 @@
-From f67f1a5777579906fc9204961d3c76f90abe1df1 Mon Sep 17 00:00:00 2001
+From a606f179b13ad7651dad6de31d71bedcf4a522a1 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:22:47 +0100
 Subject: [PATCH 3/8] Hide Pro upsells, DocuSeal console/plans/SMS/SSO settings
@@ -13,19 +13,19 @@ their target URL, instead of rewriting the conditions in the upstream
 templates. Upstream changes those conditions often (3.3.5 added
 turbo_native_app? checks), which made this patch conflict on updates.
 ---
- .../template_builder/conditions_modal.vue     |  6 +----
- .../template_builder/formula_modal.vue        |  6 +----
- app/javascript/template_builder/logo.vue      | 18 +++----------
+ .../template_builder/conditions_modal.vue     |  6 +---
+ .../template_builder/formula_modal.vue        |  6 +---
+ app/javascript/template_builder/logo.vue      | 18 ++----------
  .../_default_signature_row.html.erb           |  4 +--
  app/views/esign_settings/show.html.erb        |  2 +-
  app/views/shared/_meta.html.erb               |  1 +
  config/locales/i18n.yml                       |  8 +++---
- public/brand-base/hide-upsells.css            | 25 +++++++++++++++++++
- 8 files changed, 37 insertions(+), 33 deletions(-)
+ public/brand-base/hide-upsells.css            | 28 +++++++++++++++++++
+ 8 files changed, 40 insertions(+), 33 deletions(-)
  create mode 100644 public/brand-base/hide-upsells.css
 
 diff --git a/app/javascript/template_builder/conditions_modal.vue b/app/javascript/template_builder/conditions_modal.vue
-index c625f43e..ff9a7e0b 100644
+index 4e29c8de..e1d0e70b 100644
 --- a/app/javascript/template_builder/conditions_modal.vue
 +++ b/app/javascript/template_builder/conditions_modal.vue
 @@ -26,11 +26,7 @@
@@ -42,7 +42,7 @@ index c625f43e..ff9a7e0b 100644
          <form @submit.prevent="validateSaveAndClose">
            <div :class="inline && nativePlatform === 'android' ? 'mt-1 mb-4' : 'my-4'">
 diff --git a/app/javascript/template_builder/formula_modal.vue b/app/javascript/template_builder/formula_modal.vue
-index 53ddb12a..02758bd7 100644
+index bde51008..28247e39 100644
 --- a/app/javascript/template_builder/formula_modal.vue
 +++ b/app/javascript/template_builder/formula_modal.vue
 @@ -26,11 +26,7 @@
@@ -127,7 +127,7 @@ index 52fb73ae..d989515f 100644
 +<link rel="stylesheet" href="/brand-base/hide-upsells.css?v=<%= Brand::BASE_CSS_VERSION %>">
  <link rel="stylesheet" href="<%= Brand.asset('brand.css') %>">
 diff --git a/config/locales/i18n.yml b/config/locales/i18n.yml
-index 55ae3683..00817eb5 100644
+index 53543e3c..a5f9e903 100644
 --- a/config/locales/i18n.yml
 +++ b/config/locales/i18n.yml
 @@ -289,7 +289,7 @@ en: &en
@@ -139,7 +139,7 @@ index 55ae3683..00817eb5 100644
    use_your_own_certificates_to_sign_and_verify_pdf_files: Use your own certificates to sign and verify PDF files.
    upload_certificate: Upload Certificate
    name: Name
-@@ -1003,7 +1003,7 @@ en: &en
+@@ -1005,7 +1005,7 @@ en: &en
    mcp_token_has_been_removed: MCP token has been removed.
    enable_mcp_server: Enable MCP server
    all_existing_mcp_connections_will_be_stopped_immediately_when_this_setting_is_disabled: All existing MCP connections will be stopped immediately when this setting is disabled.
@@ -148,7 +148,7 @@ index 55ae3683..00817eb5 100644
    add_the_following_to_your_mcp_client_configuration: Add the following to your MCP client configuration
    works_with_claude_desktop_cursor_windsurf_vs_code_and_any_mcp_compatible_client: Works with Claude Desktop, Cursor, Windsurf, VS Code, and any MCP-compatible client.
    your_email_address_has_been_changed: Your email address has been changed
-@@ -6080,7 +6080,7 @@ de: &de
+@@ -6100,7 +6100,7 @@ de: &de
    save: Speichern
    saving: Wird gespeichert
    changes_have_been_saved: Änderungen wurden gespeichert.
@@ -157,7 +157,7 @@ index 55ae3683..00817eb5 100644
    use_your_own_certificates_to_sign_and_verify_pdf_files: Verwenden Sie Ihre eigenen Zertifikate, um PDF-Dateien zu signieren und zu verifizieren.
    upload_certificate: Zertifikat hochladen
    name: Name
-@@ -6798,7 +6798,7 @@ de: &de
+@@ -6820,7 +6820,7 @@ de: &de
    mcp_token_has_been_removed: Das MCP-Token wurde entfernt.
    enable_mcp_server: MCP-Server aktivieren
    all_existing_mcp_connections_will_be_stopped_immediately_when_this_setting_is_disabled: Alle bestehenden MCP-Verbindungen werden sofort gestoppt, wenn diese Einstellung deaktiviert wird.
@@ -168,10 +168,10 @@ index 55ae3683..00817eb5 100644
    your_email_address_has_been_changed: Ihre E-Mail-Adresse wurde geändert
 diff --git a/public/brand-base/hide-upsells.css b/public/brand-base/hide-upsells.css
 new file mode 100644
-index 00000000..d200599c
+index 00000000..5c144a5b
 --- /dev/null
 +++ b/public/brand-base/hide-upsells.css
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,28 @@
 +/* Hides DocuSeal Pro upsells (patch 0003). Pro features stay locked; they are only no longer advertised.
 +   The upsell links are matched by their target URL instead of editing the upstream templates,
 +   so changes to the surrounding conditions upstream do not break the patch on updates.
@@ -194,9 +194,12 @@ index 00000000..d200599c
 +/* locked field tiles in the template builder (phone/SMS, qualified signature) and the "Send SMS" button */
 +.tooltip:has(> a[href^="https://www.docuseal.com/"]),
 +div:has(> .tooltip > a[href*="/console_redirect"]),
-+div:has(> .tooltip > a[href^="https://docuseal.com/sign_up"]) {
++div:has(> .tooltip > a[href^="https://docuseal.com/sign_up"]),
++/* "Get the DocuSeal app" banner for signed-in users on iOS/Android (since 3.3.6) */
++div:has(> span > a[href^="https://apps.apple.com/us/app/docuseal"]),
++div:has(> span > a[href^="https://play.google.com/store/apps/details?id=com.docuseal"]) {
 +  display: none !important;
 +}
 -- 
-2.53.0
+2.54.0 (Apple Git-157)
 
