@@ -1,4 +1,4 @@
-From b42bf6f94181ae5408d769bb298f43938ca75f38 Mon Sep 17 00:00:00 2001
+From d13187121a08b7114e2ec8d0cf3ab2ed58957f7b Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:25:31 +0100
 Subject: [PATCH 6/8] Generic OpenID Connect login (authorization code + PKCE),
@@ -233,7 +233,7 @@ index 00000000..4d7aa721
 +  end
 +end
 diff --git a/config/routes.rb b/config/routes.rb
-index c6a516e7..bc32af16 100644
+index 29374fb4..8d342ffb 100644
 --- a/config/routes.rb
 +++ b/config/routes.rb
 @@ -14,6 +14,9 @@ Rails.application.routes.draw do
@@ -526,5 +526,5 @@ index 00000000..051ac34a
 +  end
 +end
 -- 
-2.53.0
+2.54.0 (Apple Git-157)
 

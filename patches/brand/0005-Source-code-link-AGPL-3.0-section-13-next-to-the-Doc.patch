@@ -1,4 +1,4 @@
-From 0f055e560f4acf1256351912535aa73ce37210f6 Mon Sep 17 00:00:00 2001
+From 9f19f810aab0a75e7770e6874f69969d14dd17e8 Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:23:22 +0100
 Subject: [PATCH 5/8] Source code link (AGPL-3.0 section 13) next to the
@@ -62,7 +62,7 @@ index dcb79251..394169f3 100644
 +  · <a href="<%= Brand.source_url %>" class="underline" target="_blank" rel="noopener"><%= t('source_code', default: 'Source code') %></a>
  </div>
 diff --git a/config/locales/i18n.yml b/config/locales/i18n.yml
-index 00817eb5..c411e372 100644
+index a5f9e903..d1bd9482 100644
 --- a/config/locales/i18n.yml
 +++ b/config/locales/i18n.yml
 @@ -732,6 +732,7 @@ en: &en
@@ -73,7 +73,7 @@ index 00817eb5..c411e372 100644
    copy_link: Copy Link
    opened: Opened
    sent: Sent
-@@ -6530,6 +6531,7 @@ de: &de
+@@ -6550,6 +6551,7 @@ de: &de
    upload_list: Liste hochladen
    creating: Erstellen
    open_source_documents_software: Open-Source-Dokumentensoftware
@@ -82,7 +82,7 @@ index 00817eb5..c411e372 100644
    opened: Geöffnet
    sent: Gesendet
 diff --git a/config/routes.rb b/config/routes.rb
-index 812581ae..c6a516e7 100644
+index 70d51f6c..29374fb4 100644
 --- a/config/routes.rb
 +++ b/config/routes.rb
 @@ -12,6 +12,8 @@ Rails.application.routes.draw do
@@ -95,5 +95,5 @@ index 812581ae..c6a516e7 100644
  
    devise_for :users, path: '/', only: %i[sessions passwords],
 -- 
-2.53.0
+2.54.0 (Apple Git-157)
 

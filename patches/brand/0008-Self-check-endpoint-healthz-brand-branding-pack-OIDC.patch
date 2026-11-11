@@ -1,4 +1,4 @@
-From c7df84025e5e00c22ed841469ba905475b2f5e86 Mon Sep 17 00:00:00 2001
+From 9dd787976b4b9f88bf3f801865bfcb6b0441ca6a Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:26:15 +0100
 Subject: [PATCH 8/8] Self-check endpoint /healthz/brand (branding pack, OIDC
@@ -61,7 +61,7 @@ index 00000000..092990c3
 +  end
 +end
 diff --git a/config/routes.rb b/config/routes.rb
-index bc32af16..0819486d 100644
+index 8d342ffb..5ec13958 100644
 --- a/config/routes.rb
 +++ b/config/routes.rb
 @@ -14,6 +14,7 @@ Rails.application.routes.draw do
@@ -73,5 +73,5 @@ index bc32af16..0819486d 100644
    get 'auth/oidc' => 'oidc_sessions#new', as: :oidc_login
    get 'auth/oidc/callback' => 'oidc_sessions#callback', as: :oidc_callback
 -- 
-2.53.0
+2.54.0 (Apple Git-157)
 

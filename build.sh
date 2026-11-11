@@ -2,7 +2,7 @@
 # Builds docuseal-<set>:<version>-<rev> = upstream release tag + patches/<set>/*.patch,
 # using the upstream Dockerfile (assets are rebuilt with yarn/shakapacker).
 #
-#   ./build.sh brand 3.3.5 1    # branding via env + brand pack, OIDC, hardening
+#   ./build.sh brand 3.3.6 1    # branding via env + brand pack, OIDC, hardening
 #
 # The patches apply cleanly to the release in patches/<set>/BASE. For a newer release
 # they are applied there first and then moved with `git rebase --onto`, a real 3-way
@@ -10,7 +10,7 @@
 # genuine conflicts fail it (see README.md, Updating).
 set -eu
 SET=${1:?patch set, e.g. brand}
-V=${2:?upstream version, e.g. 3.3.5}
+V=${2:?upstream version, e.g. 3.3.6}
 REV=${3:-1}
 cd "$(dirname "$0")"
 [ -d "patches/$SET" ] || { echo "!! unknown patch set: $SET"; exit 1; }

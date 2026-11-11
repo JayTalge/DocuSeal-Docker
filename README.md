@@ -6,7 +6,7 @@ This is the Corresponding Source of the modified DocuSeal instances run with the
 
 | Set | Patches made for | Image |
 |---|---|---|
-| `patches/brand/` | 3.3.5 (`patches/brand/BASE`) | `ghcr.io/jaytalge/docuseal-brand` |
+| `patches/brand/` | 3.3.6 (`patches/brand/BASE`) | `ghcr.io/jaytalge/docuseal-brand` |
 
 ## Build
 
@@ -23,7 +23,7 @@ Watchtower can follow `:latest`. For a pinned deployment use `<version>-<commit>
 Locally:
 
 ```sh
-./build.sh brand 3.3.5 1     # -> local image docuseal-brand:3.3.5-1
+./build.sh brand 3.3.6 1     # -> local image docuseal-brand:3.3.6-1
 ```
 
 Use the image like `docuseal/docuseal` (same env, volumes and port 3000). The image only exists locally, so set `pull_policy: never` in Compose and exclude it from Watchtower.
