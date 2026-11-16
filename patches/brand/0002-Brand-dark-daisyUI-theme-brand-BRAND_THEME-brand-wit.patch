@@ -1,4 +1,4 @@
-From 3c622345cc17f13203c1d914abe77fa4d0f0a769 Mon Sep 17 00:00:00 2001
+From f0dda1aa78cc136f5adca3d612b1e164b2bbb79c Mon Sep 17 00:00:00 2001
 From: build <build@localhost>
 Date: Thu, 29 Oct 2026 17:22:26 +0100
 Subject: [PATCH 2/8] Brand: dark daisyUI theme "brand" (BRAND_THEME=brand)
